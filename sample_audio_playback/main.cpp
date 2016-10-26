@@ -4,32 +4,60 @@
 #include "record.h"
 #include "playback.h"
 #include "console.h"
+#include "demo.h"
 
-#define RECORD_TIME		6		// seconds to record for
-#define SAMPLES_SEC		8000	// samples per second
-
-static short iBigBuf[SAMPLES_SEC * RECORD_TIME];
-static long	 lBigBufSize = SAMPLES_SEC * RECORD_TIME;	// in sample
+#define DEFAULT_RECORD_TIME		2		// seconds to record for
+#define DEFAULT_SAMPLES_SEC		8000	// samples per second
 
 int	main(int argc, char *argv[])
 {
-	int	iTestPlayRecord = 0;        // THIS VALUE CHANGES TO 1 TO RECORD FROM MIC
+	char option;
+	short *audio_buff = NULL;
+	int sample_sec = DEFAULT_SAMPLES_SEC;
+	int record_time = DEFAULT_RECORD_TIME;
+	long audio_buff_sz = sample_sec * record_time;
 
-	if (toupper(*argv[1]) == 'R') {
-		iTestPlayRecord = 1;
+	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
+
+	while (1) {
+		menu(sample_sec, record_time);
+
+		option = fgetc(stdin);
+		// Flushing \n character in stdin
+		while (getchar() != '\n');
+
+		system("CLS");
+		
+		switch (option) {
+			case '1':
+				RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
+				CloseRecording();
+				break;
+			case '2':
+				if (!audio_buff) {
+					Errorp("Empty Buffer! Please Record audio before playback\n");
+					break;
+				} else {
+					printf("Playing..\n");
+					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+					ClosePlayback();
+					break;
+				}
+			case '3':
+				getNewParam(&sample_sec, &record_time);
+				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
+				break;
+			case '4':
+				break;
+			default:
+				printf("Please Enter a valid option 1-4!\n");
+				_sleep(2000);
+		}
+
+		if (option == '4')
+			break;
+
+		system("CLS");
 	}
-	InitializePlayback();
-
-	if (iTestPlayRecord) {
-		// Record the special buffer
-		InitializeRecording();
-		RecordBuffer(iBigBuf, lBigBufSize);
-		CloseRecording();
-		// play the special buffer
-		printf("Playing special %d..\n", 60);
-		PlayBuffer(iBigBuf, lBigBufSize);
-	}
-
-	ClosePlayback();
 	return(0);
 }

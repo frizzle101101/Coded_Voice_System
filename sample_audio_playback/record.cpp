@@ -5,24 +5,17 @@
 #include <math.h>
 
 
-#define RECORD_TIME		6		// seconds to record for
-#define SAMPLES_SEC		8000	// samples per second
-
-static	int		g_nSamplesPerSec = SAMPLES_SEC;
-static	int		g_nBitsPerSample = 16;
+static	int	g_nBitsPerSample = 16;
 static	WAVEFORMATEX WaveFormat;
 static  HWAVEIN		HWaveIn;
 static  WAVEHDR WaveHeaderIn;
 
-static short iBigBuf[SAMPLES_SEC * RECORD_TIME];
-static long	 lBigBufSize = SAMPLES_SEC * RECORD_TIME;	// in samples
 
-
-static void SetupFormat(WAVEFORMATEX *wf)
+static void SetupFormat(WAVEFORMATEX *wf, int sample_sec)
 {
 	wf->wFormatTag = WAVE_FORMAT_PCM;
 	wf->nChannels = 1;
-	wf->nSamplesPerSec = g_nSamplesPerSec;
+	wf->nSamplesPerSec = sample_sec;
 	wf->wBitsPerSample = g_nBitsPerSample;
 	wf->nBlockAlign = wf->nChannels * (wf->wBitsPerSample / 8);
 	wf->nAvgBytesPerSec = wf->nSamplesPerSec * wf->nBlockAlign;
@@ -84,20 +77,18 @@ static int Errorp(const char *szFormat, ...)
 }
 
 
-int InitializeRecording(void)
+int InitializeRecording(short *iBigBuf, long lBigBufSize, int sample_sec)
 {
 	MMRESULT rc;
 
 	// set up the format structure, needed for recording.
-	SetupFormat(&WaveFormat);
-
+	SetupFormat(&WaveFormat, sample_sec);
 	// open the recording device
 	rc = waveInOpen(&HWaveIn, WAVE_MAPPER, &WaveFormat, (DWORD)NULL, 0, CALLBACK_NULL);
 	if (rc) {
 		Errorp("Unable to open Input sound Device! Error %x.", rc);
 		return(0);
 	}
-
 	// prepare the buffer header for use later on
 	WaveHeaderIn.lpData = (char *)iBigBuf;
 	WaveHeaderIn.dwBufferLength = lBigBufSize*sizeof(short);
@@ -114,30 +105,20 @@ int InitializeRecording(void)
 /* RecordBuffer() : Fill in the buffer from input device.
 * Returns 0 for failure.
 */
-int	RecordBuffer(short *piBuf, long lBufSize)
+int	RecordBuffer(short *piBuf, long lBufSize, int sample_sec)
 {
-	static	WAVEFORMATEX WaveFormat;	/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
-	static  WAVEHDR	WaveHeader;			/* WAVEHDR structure for this buffer */
+	/* WAVEHDR structure for this buffer */
 	MMRESULT	mmErr;
 	int		rc;
 
 	printf("Recording now.....");
 
-	// stop previous recording (just in case)
-	waveInReset(HWaveIn);   // is this good?
+	InitializeRecording(piBuf, lBufSize, sample_sec);
 
-	// get the header ready for recording.  This should not be needed here AND in init.
-	WaveHeader.lpData = (char *)piBuf;
-	WaveHeader.dwBufferLength = lBufSize*sizeof(short);
-	rc = waveInPrepareHeader(HWaveIn, &WaveHeader, sizeof(WAVEHDR));
-	if (rc) {
-		Errorp("Failed preparing WAVEHDR, error 0x%x.", rc);
-		return(0);
-	}
-	WaveHeader.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);
+	WaveHeaderIn.dwFlags &= ~(WHDR_BEGINLOOP | WHDR_ENDLOOP);
 
 	// Give the buffer to the recording device to fill.
-	mmErr = waveInAddBuffer(HWaveIn, &WaveHeader, sizeof(WAVEHDR));
+	mmErr = waveInAddBuffer(HWaveIn, &WaveHeaderIn, sizeof(WAVEHDR));
 	if (mmErr != MMSYSERR_NOERROR) {
 		char	szErrBuf[150];
 		waveOutGetErrorText(mmErr, szErrBuf, sizeof(szErrBuf));
@@ -155,7 +136,7 @@ int	RecordBuffer(short *piBuf, long lBufSize)
 	}
 
 	// wait for completion
-	rc = WaitOnHeader(&WaveHeader, '.');
+	rc = WaitOnHeader(&WaveHeaderIn, '.');
 
 	// probably not necessary
 	waveInStop(HWaveIn);

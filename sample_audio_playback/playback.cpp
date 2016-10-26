@@ -28,24 +28,22 @@
 #include "playback.h"    			// Used for audio recording and playback
 
 
-#define SAMPLES_SEC		8000	// samples per second
-
 // output and input channel parameters
-static	int		g_nSamplesPerSec = SAMPLES_SEC;
 static	int		g_nBitsPerSample = 16;
 static	HWAVEOUT	HWaveOut;				/* Handle of opened WAVE Out and In device */
 static	WAVEFORMATEX WaveFormat;			/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
+static  WAVEHDR	WaveHeader;			/* WAVEHDR structure for this buffer */
 
 static int WaitOnHeader( WAVEHDR *wh, char cDit );
 
 /* SetupFormat() initializes a WAVEFORMATEX structure to the required 
  *				 parameters (sample rate, bits per sample, etc)
  */
-static void SetupFormat( WAVEFORMATEX *wf )
+static void SetupFormat( WAVEFORMATEX *wf, int sample_sec )
 {	
 	wf->wFormatTag = WAVE_FORMAT_PCM;
 	wf->nChannels = 1;
-	wf->nSamplesPerSec = g_nSamplesPerSec;
+	wf->nSamplesPerSec = sample_sec;
 	wf->wBitsPerSample = g_nBitsPerSample;
 	wf->nBlockAlign = wf->nChannels * (wf->wBitsPerSample/8);
 	wf->nAvgBytesPerSec = wf->nSamplesPerSec * wf->nBlockAlign;
@@ -56,12 +54,12 @@ static void SetupFormat( WAVEFORMATEX *wf )
 /* InitializePlayback()
  */
 
-int	InitializePlayback(void)
+int InitializePlayBacking(int sample_sec)
 {
 	int		rc;
 
 	// set up the format structure, needed for playback (and recording)
-	SetupFormat( &WaveFormat );
+	SetupFormat( &WaveFormat, sample_sec);
 
 	// open the playback device
 	rc = waveOutOpen(&HWaveOut, WAVE_MAPPER, &WaveFormat, (DWORD)NULL, 0, CALLBACK_NULL);
@@ -75,13 +73,12 @@ int	InitializePlayback(void)
 
 /* PlayBuffer()
  */
-int PlayBuffer( short *piBuf, long lSamples )
+int PlayBuffer( short *piBuf, long lSamples, int sample_sec)
 {
-	static	WAVEFORMATEX WaveFormat;	/* WAVEFORMATEX structure for reading in the WAVE fmt chunk */
-	static  WAVEHDR	WaveHeader;			/* WAVEHDR structure for this buffer */
 	MMRESULT	mmErr;
 	int		rc;
 
+	InitializePlayBacking(sample_sec);
 	// stop previous note (just in case)
 	waveOutReset(HWaveOut);   // is this good?
 
