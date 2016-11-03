@@ -2,14 +2,17 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include "RS232Comm.h"
+#include <time.h>
+#include "RS232Tx.h"
 
 #define EX_FATAL 1
 #define BUFSIZE 140
+#define SUCESSSEQ "DEADBEEF"
+#define FTLERR "FTLERR"
+#define WAITTIME 10
 
 // Communication variables and parameters
 HANDLE hCom;										// Pointer to a COM port
-HANDLE hCom2;
 int nComRate = 9600;								// Baud (Bit) rate in bits/second 
 int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimout struct variable
@@ -21,12 +24,34 @@ int main() {
 	char msgIn[BUFSIZE];// Received message
 	initPort();										// Initialize the port
 	outputToPort(msgOut, strlen(msgOut)+1);			// Send string to port - include space for '\0' termination
-	Sleep(1000);									// Allow time for signal propagation on cable 
-	inputFromPort(msgIn, BUFSIZE);					// Receive string from port
-	printf("\nMessage Received: %s\n\n", msgIn);	// Display message from port
+	Sleep(1000);
+	//get current time for timeout reference
+	SYSTEMTIME timeoutWatch;
+	GetSystemTime(&timeoutWatch);
+	while (!inputFromPort(msgIn, BUFSIZE))					// Receive string from port
+	{
+		SYSTEMTIME currTime;
+		GetSystemTime(&currTime);
+		if (currTime.wMinute > timeoutWatch.wMinute)
+		{
+			if (currTime.wSecond + 60 - WAITTIME > timeoutWatch.wSecond)
+			{
+				printf("\nTimeout(%d)\n", WAITTIME);
+				break;
+			}
+		}
+		else
+		{
+			if (currTime.wSecond - WAITTIME > timeoutWatch.wSecond)
+			{
+				printf("\nTimeout(%d)\n", WAITTIME);
+				break;
+			}
+		}
+	}
+	
 	purgePort();									// Purge the port
-	CloseHandle(hCom);
-	CloseHandle(hCom2);								// Closes the handle pointing to the COM port
+	CloseHandle(hCom);							// Closes the handle pointing to the COM port
 	system("pause");
 }
 
@@ -41,7 +66,6 @@ void initPort() {
 // Purge any outstanding requests on the serial port (initialize)
 void purgePort() {
 	PurgeComm(hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
-	PurgeComm(hCom2, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
 }
 
 // Output message to port (COM4)
@@ -67,14 +91,14 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 		printf("\nSuccessful transmission, there were %ld bytes transmitted\n", NumberofBytesTransmitted);
 }
 
-void inputFromPort(LPVOID buf, DWORD szBuf) {
+int inputFromPort(LPVOID buf, DWORD szBuf) {
 	int i = 0;
 	DWORD NumberofBytesRead;
 	LPDWORD lpErrors = 0;
 	LPCOMSTAT lpStat = 0;
 
 	i = ReadFile(
-		hCom2,										// Read handle pointing to COM port
+		hCom,										// Read handle pointing to COM port
 		buf,										// Buffer size
 		szBuf,  									// Size of buffer - Maximum number of bytes to read
 		&NumberofBytesRead,
@@ -83,10 +107,28 @@ void inputFromPort(LPVOID buf, DWORD szBuf) {
 	// Handle the timeout error
 	if (i == 0 ) {
 		printf("\nRead Error: 0x%x\n", GetLastError());
-		ClearCommError(hCom2, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
+		ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
+		return(-1);
 	}
 	else
-		printf("\nSuccessful reception!, There were %ld bytes read\n", NumberofBytesRead);
+	{
+		if (!strcmp((char*)buf, SUCESSSEQ))// Check for SUCESSSEQ or FTLERR message from port
+		{
+			printf("\nSuccessful Reception at Partner Com Client!\n");
+			return(1);
+		}
+		else if (!strcmp((char*)buf, FTLERR))
+		{
+			printf("\nFTLERR at Partner Com Client!\n");
+			return(-1);
+		}
+		else
+		{
+			printf("\n>No Reception from Partner Com Client!\n");
+			return(0);
+		}
+		
+	}
 		
 }
 
@@ -107,26 +149,11 @@ void createPortFile() {
 		FILE_ATTRIBUTE_NORMAL,						// Do not set any file attributes --> Use synchronous operation
 		NULL										// No template
 	);
-	hCom2 = CreateFile(
-		"\\\\.\\COM10",										// COM port number
-		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
-		NULL,										// No sharing allowed
-		NULL,										// No security
-		OPEN_EXISTING,								// Opens the existing com port
-		FILE_ATTRIBUTE_NORMAL,						// Do not set any file attributes --> Use synchronous operation
-		NULL										// No template
-		);
 	if (hCom == INVALID_HANDLE_VALUE) {
 		printf("\nFatal Error 0x%x: Unable to open\n", GetLastError());
 	}
 	else {
 		printf("\nCOM is now open\n");
-	}
-	if (hCom2 == INVALID_HANDLE_VALUE) {
-		printf("\nFatal Error 0x%x: Unable to open2\n", GetLastError());
-	}
-	else {
-		printf("\nCOM2 is now open\n");
 	}
 }
 
@@ -140,11 +167,6 @@ static int SetComParms() {
 		printf("\nFatal Error 0x%x: Unable to GetCommState for hCom\n", GetLastError());
 		return(0);
 	}
-	if (!GetCommState(hCom2, &dcb))
-	{
-		printf("\nFatal Error 0x%x: Unable to GetCommState for hCom2\n", GetLastError());
-		return(0);
-	}
 
 	// Set our own parameters from Globals
 	dcb.BaudRate = nComRate;						// Baud (bit) rate
@@ -156,11 +178,6 @@ static int SetComParms() {
 		printf("\nFatal Error 0x%x: Unable to SetCommState for hCom\n", GetLastError());
 		return(0);
 	}
-	if (!SetCommState(hCom2, &dcb))
-	{
-		printf("\nFatal Error 0x%x: Unable to SetCommState for hCom2\n", GetLastError());
-		return(0);
-	}
 
 	// Set communication timeouts (SEE COMMTIMEOUTS structure in MSDN) - want a fairly long timeout
 	memset((void *)&timeout, 0, sizeof(timeout));
@@ -168,7 +185,6 @@ static int SetComParms() {
 	timeout.ReadTotalTimeoutMultiplier = 1;			// The multiplier used to calculate the total time-out period for read operations in milliseconds. For each read operation this value is multiplied by the requested number of bytes to be read
 	timeout.ReadTotalTimeoutConstant = 1000;		// A constant added to the calculation of the total time-out period. This constant is added to the resulting product of the ReadTotalTimeoutMultiplier and the number of bytes (above).
 	SetCommTimeouts(hCom, &timeout);
-	SetCommTimeouts(hCom2, &timeout);
 	return(1);
 }
 
