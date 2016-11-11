@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-#include "RS232Tx.h"
+#include "RS232.h"
+
 
 #define EX_FATAL 1
 #define BUFSIZE 140
@@ -11,48 +12,14 @@
 #define FTLERR "FTLERR"
 #define WAITTIME 40
 
-// Communication variables and parameters
-HANDLE hCom;										// Pointer to a COM port
+static HANDLE hCom;										// Pointer to a COM port
 int nComRate = 9600;								// Baud (Bit) rate in bits/second 
 int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimout struct variable
 
-// The client - A testing main that calls the functions below
-int main() {
-
-	char msgOut[] = "afsadfadfgdfsdfasdfasdfads";						// Sent message
-	char msgIn[BUFSIZE];// Received message
-	initPort();										// Initialize the port
-	outputToPort(msgOut, strlen(msgOut)+1);			// Send string to port - include space for '\0' termination
-	Sleep(1000);
-	//get current time for timeout reference
-	SYSTEMTIME timeoutWatch;
-	GetSystemTime(&timeoutWatch);
-	while (inputFromPort(msgIn, BUFSIZE) == 0)					// Receive string from port
-	{
-		SYSTEMTIME currTime;
-		GetSystemTime(&currTime);
-		if (currTime.wMinute > timeoutWatch.wMinute)
-		{
-			if (currTime.wSecond + 60 - WAITTIME > timeoutWatch.wSecond)
-			{
-				printf("\nTimeout(%d)\n", WAITTIME);
-				break;
-			}
-		}
-		else
-		{
-			if (currTime.wSecond - WAITTIME > timeoutWatch.wSecond)
-			{
-				printf("\nTimeout(%d)\n", WAITTIME);
-				break;
-			}
-		}
-	}
-	
-	//purgePort();									// Purge the port
-	CloseHandle(hCom);							// Closes the handle pointing to the COM port
-	system("pause");
+HANDLE getCom()
+{
+	return hCom;
 }
 
 // Initializes the port and sets the communication parameters
@@ -94,41 +61,35 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 int inputFromPort(LPVOID buf, DWORD szBuf) {
 	int i = 0;
 	DWORD NumberofBytesRead;
+	DWORD dwCommEvent;
 	LPDWORD lpErrors = 0;
 	LPCOMSTAT lpStat = 0;
 
-	i = ReadFile(
-		hCom,										// Read handle pointing to COM port
-		buf,										// Buffer size
-		szBuf,  									// Size of buffer - Maximum number of bytes to read
-		&NumberofBytesRead,
-		NULL
-	);
-	// Handle the timeout error
-	if (i == 0 ) {
-		printf("\nRead Error: 0x%x\n", GetLastError());
-		ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
-		return(-1);
+	if (!SetCommMask(hCom, EV_RXCHAR))
+		printf("\SetCommMask Error: 0x%x\n", GetLastError());
+
+	if (WaitCommEvent(hCom,&dwCommEvent,NULL))
+	{
+		i = ReadFile(
+			hCom,										// Read handle pointing to COM port
+			buf,										// Buffer size
+			szBuf,  									// Size of buffer - Maximum number of bytes to read
+			&NumberofBytesRead,
+			NULL
+			);
+		// Handle the timeout error
+		if (i == 0 ) {
+			printf("\nRead Error: 0x%x\n", GetLastError());
+			ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
+			return(-1);
+		}
 	}
 	else
 	{
-		if (!strcmp((char*)buf, SUCESSSEQ))// Check for SUCESSSEQ or FTLERR message from port
-		{
-			printf("\nSuccessful Reception at Partner Com Client!\n");
-			return(1);
-		}
-		else if (!strcmp((char*)buf, FTLERR))
-		{
-			printf("\nFTLERR at Partner Com Client!\n");
-			return(-1);
-		}
-		else
-		{
-			printf("\n>No Reception from Partner Com Client!\n");
-			return(0);
-		}
-		
+		printf("\n>No Reception from Partner Com Client!\n");
+		return(0);
 	}
+	
 		
 }
 
@@ -141,7 +102,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 void createPortFile() {
 	// Call the CreateFile() function 
 	hCom = CreateFile(
-		"\\\\.\\COM11",										// COM port number
+		"\\\\.\\COM10",										// COM port number
 		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
 		NULL,										// No sharing allowed
 		NULL,										// No security

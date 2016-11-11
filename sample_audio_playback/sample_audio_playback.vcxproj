@@ -147,12 +147,14 @@
     <ClCompile Include="main.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="record.cpp" />
+    <ClCompile Include="RS232.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h" />
     <ClInclude Include="demo.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="record.h" />
+    <ClInclude Include="RS232.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
