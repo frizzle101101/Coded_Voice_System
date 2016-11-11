@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "RS232Rx.h"
+#include "RS232Rx\menu.h"
 
 #define EX_FATAL 1
 #define BUFSIZE 140
@@ -16,17 +17,62 @@ int nComBits = 8;									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimout struct variable
 
 // The client - A testing main that calls the functions below
-int main() {
+int main() 
+{
+	char option;
 
+	while (1) {
+		menu();
+
+		option = fgetc(stdin);
+		// Flushing \n character in stdin
+		while (getchar() != '\n');
+
+		system("CLS");
+
+		switch (option) {
+		case '1':
+			receive_station();
+			break;
+		case '2':
+			printf("Function has not been implemented yet!\n");
+			_sleep(2000);
+				break;
+		case '3':
+			printf("Function has not been implemented yet!\n");
+			_sleep(2000);
+			break;
+		case '4':
+			printf("Function has not been implemented yet!\n");
+			_sleep(2000);
+			break;
+		default:
+			printf("Please Enter a valid option 1-4!\n");
+			_sleep(2000);
+		}
+
+		if (option == '4')
+			break;
+
+		system("CLS");
+	}
+	
+	system("pause");
+}
+
+void receive_station(void)
+{
 	char msgOut[] = "afsadfadfgdfsdfasdfasdfads";						// Sent message
 	char msgIn[BUFSIZE];// Received message
 	initPort();										// Initialize the port
-						
+
+	Sleep(2000);
 	if (inputFromPort(msgIn, BUFSIZE))// Receive string from port
 	{
 		Sleep(2000);
 		printf("\nMessage Received: %s\n\n", msgIn);	// Display message from port
 		outputToPort(SUCESSSEQ, strlen(SUCESSSEQ) + 1);
+		_sleep(5000);
 	}
 	else
 	{
@@ -34,18 +80,16 @@ int main() {
 		printf("\nFTLERR: Message Not Received\n\n");	// Display message from port
 		outputToPort(FTLERR, strlen(FTLERR) + 1);
 	}
-	
-	purgePort();									// Purge the port
-	CloseHandle(hCom);					// Closes the handle pointing to the COM port
-	system("pause");
-}
 
+	//purgePort();									// Purge the port
+	CloseHandle(hCom);					// Closes the handle pointing to the COM port
+}
 // Initializes the port and sets the communication parameters
 void initPort() {
 	createPortFile();								// Initializes hCom to point to PORT4 (port 4 is used by USB-Serial adapter on my laptop)
-	purgePort();									// Purges the COM port
+	//purgePort();									// Purges the COM port
 	SetComParms();									// Uses the DCB structure to set up the COM port
-	purgePort(); 
+	//purgePort(); 
 }
 
 // Purge any outstanding requests on the serial port (initialize)
@@ -114,7 +158,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 void createPortFile() {
 	// Call the CreateFile() function 
 	hCom = CreateFile(
-		"\\\\.\\COM10",										// COM port number
+		"\\\\.\\COM9",										// COM port number
 		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
 		NULL,										// No sharing allowed
 		NULL,										// No security

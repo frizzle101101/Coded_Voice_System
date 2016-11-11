@@ -10,3 +10,5 @@ int inputFromPort(LPVOID buf, DWORD szBuf);
 // Sub functions
 void createPortFile();
 static int SetComParms();
+
+void receive_station(void);

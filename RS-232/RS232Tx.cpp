@@ -141,7 +141,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 void createPortFile() {
 	// Call the CreateFile() function 
 	hCom = CreateFile(
-		"\\\\.\\COM11",										// COM port number
+		"\\\\.\\COM9",										// COM port number
 		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
 		NULL,										// No sharing allowed
 		NULL,										// No security
