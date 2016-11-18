@@ -12,8 +12,10 @@ void menu(int sample_sec, int record_time)
 	printf("Please enter the follow option:\n");
 	printf("1 - Record Audio\n");
 	printf("2 - Play Audio\n");
-	printf("3 - Change Parameters\n");
-	printf("4 - Exit\n");
+	printf("3 - Record and Transmit Audio\n");
+	printf("4 - Recieve and Play Audio\n");
+	printf("5 - Change Parameters\n");
+	printf("6 - Exit\n");
 	printf("\n\nParameters: sample second = %d, record second = %d\n", sample_sec, record_time);
 }
 

@@ -19,9 +19,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{5F17A4E4-78EA-45C6-BAF3-2422AE43377A}</ProjectGuid>
+    <ProjectGuid>{62DAD179-8301-48D6-A992-2363B57C32D2}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>sample_audio_playback</RootNamespace>
+    <RootNamespace>ConsoleMenu</RootNamespace>
     <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
@@ -29,7 +29,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -42,7 +42,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
-    <CharacterSet>MultiByte</CharacterSet>
+    <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -142,21 +142,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="console.cpp" />
-    <ClCompile Include="demo.cpp" />
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="playback.cpp" />
-    <ClCompile Include="queue.cpp" />
-    <ClCompile Include="record.cpp" />
-    <ClCompile Include="RS232.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="console.h" />
-    <ClInclude Include="demo.h" />
-    <ClInclude Include="playback.h" />
-    <ClInclude Include="queue.h" />
-    <ClInclude Include="record.h" />
-    <ClInclude Include="RS232.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
