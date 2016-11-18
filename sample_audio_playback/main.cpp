@@ -8,6 +8,7 @@
 #include "console.h"
 #include "demo.h"
 #include "RS232.h"
+#include "queue.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
@@ -20,6 +21,12 @@ int	main(int argc, char *argv[])
 	int sample_sec = DEFAULT_SAMPLES_SEC;
 	int record_time = DEFAULT_RECORD_TIME;
 	long audio_buff_sz = sample_sec * record_time;
+	unsigned int rcvStatus = 0;
+	QUEUE *rcvQ;
+	NODE *tmp;
+
+	rcvQ = queue_init();
+	tmp = (NODE *)malloc(sizeof(NODE));
 
 	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
 
@@ -58,10 +65,13 @@ int	main(int argc, char *argv[])
 			case '4':
 				initPort();
 				//get current time for timeout reference
+				printf("Press ESC to return to menu\n");
+				int entered;
 				SYSTEMTIME timeoutWatch;
 				GetSystemTime(&timeoutWatch);
-				while (inputFromPort(audio_buff, audio_buff_sz) == 0)					// Receive string from port
+				while ((rcvStatus = inputFromPort(audio_buff, audio_buff_sz)) == 0)					// Receive string from port
 				{
+					
 					SYSTEMTIME currTime;
 					GetSystemTime(&currTime);
 					if (currTime.wMinute > timeoutWatch.wMinute)
@@ -81,31 +91,29 @@ int	main(int argc, char *argv[])
 						}
 					}
 				}
-				if (!audio_buff) {
-					Errorp("Empty Buffer! Please Record audio before playback\n");
-					break;
-				}
-				else {
-					printf("Playing..\n");
-					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
-					ClosePlayback();
-					break;
+
+				if (rcvStatus) {
+					tmp = (NODE *)malloc(sizeof(NODE));
+					tmp->data = audio_buff;
+					enqueue(rcvQ, tmp);
 				}
 				purgePort();									// Purge the port
 				CloseHandle(getCom());							// Closes the handle pointing to the COM port
+				break;
 			case '5':
 				getNewParam(&sample_sec, &record_time);
 				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
 				break;
 			case '6':
+				
+					printf("Playing..\n");
+					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+					ClosePlayback();
 				break;
 			default:
 				printf("Please Enter a valid option 1-4!\n");
 				_sleep(2000);
 		}
-
-		if (option == '4')
-			break;
 
 		system("CLS");
 	}
