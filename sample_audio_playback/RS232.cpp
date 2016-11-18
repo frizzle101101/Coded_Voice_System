@@ -11,7 +11,7 @@
 #define SUCESSSEQ "DEADBEEF"
 #define FTLERR "FTLERR"
 #define WAITTIME 40
-
+#define PORT "\\\\.\\COM11"
 static HANDLE hCom;										// Pointer to a COM port
 int nComRate = 9600;								// Baud (Bit) rate in bits/second 
 int nComBits = 8;									// Number of bits per frame
@@ -35,7 +35,6 @@ void purgePort() {
 	PurgeComm(hCom, PURGE_RXABORT | PURGE_RXCLEAR | PURGE_TXABORT | PURGE_TXCLEAR);
 }
 
-// Output message to port (COM4)
 void outputToPort(LPCVOID buf1, DWORD szBuf) {
 	int i=0;
 	DWORD NumberofBytesTransmitted;
@@ -82,7 +81,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 			printf("\nRead Error: 0x%x\n", GetLastError());
 			ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
 			return(-1);
-		}
+		} 
 	}
 	else
 	{
@@ -102,7 +101,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 void createPortFile() {
 	// Call the CreateFile() function 
 	hCom = CreateFile(
-		"\\\\.\\COM10",										// COM port number
+		PORT,										// COM port number
 		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
 		NULL,										// No sharing allowed
 		NULL,										// No security
@@ -114,7 +113,7 @@ void createPortFile() {
 		printf("\nFatal Error 0x%x: Unable to open\n", GetLastError());
 	}
 	else {
-		printf("\nCOM is now open\n");
+		printf("\n%s is now open\n", PORT);
 	}
 }
 
