@@ -12,9 +12,10 @@
 #define FTLERR "FTLERR"
 #define WAITTIME 40
 #define PORT "\\\\.\\COM11"
+#define MAX_STACK_SIZE 1000000
 static HANDLE hCom;										// Pointer to a COM port
-int nComRate = 9600;								// Baud (Bit) rate in bits/second 
-int nComBits = 8;									// Number of bits per frame
+//int nComRate = 9600;								// Baud (Bit) rate in bits/second 
+#define COMBYTESIZE  8									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimout struct variable
 
 HANDLE getCom()
@@ -44,10 +45,13 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 	i = WriteFile(
 		hCom,										// Write handle pointing to COM port
 		buf1,										// Buffer size
-		szBuf,										// Size of buffer
+		szBuf * 2,										// Size of buffer
 		&NumberofBytesTransmitted,					// Written number of bytes
 		NULL
 	);
+
+	printf("%d\n", NumberofBytesTransmitted);
+	_sleep(2000);
 	// Handle the timeout error
 	if (i == 0) {
 		printf("\nWrite Error: 0x%x\n", GetLastError());
@@ -63,25 +67,47 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 	DWORD dwCommEvent;
 	LPDWORD lpErrors = 0;
 	LPCOMSTAT lpStat = 0;
+	char tmp;
+	char serial[MAX_STACK_SIZE];
 
 	if (!SetCommMask(hCom, EV_RXCHAR))
 		printf("\SetCommMask Error: 0x%x\n", GetLastError());
 
 	if (WaitCommEvent(hCom,&dwCommEvent,NULL))
 	{
+		do
+		{
+			ReadFile(hCom,              //Handle of the Serial port
+				&tmp,                   //Temporary character
+				sizeof(tmp),           //Size of TempChar
+				&NumberofBytesRead,    //Number of bytes read
+				NULL);
+
+			printf("%d ", i);
+			serial[i] = tmp;// Store Tempchar into buffer
+			i++;
+		} while (NumberofBytesRead > 0);
+
+		printf("Total bytes read: %d\n", i);
+
+		memcpy(buf, serial, i);
+		/*
 		i = ReadFile(
 			hCom,										// Read handle pointing to COM port
 			buf,										// Buffer size
-			szBuf,  									// Size of buffer - Maximum number of bytes to read
+			szBuf * 2,  									// Size of buffer - Maximum number of bytes to read
 			&NumberofBytesRead,
 			NULL
 			);
+		
+
+		_sleep(2000);
 		// Handle the timeout error
 		if (i == 0 ) {
 			printf("\nRead Error: 0x%x\n", GetLastError());
 			ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
 			return(-1);
-		} 
+		}*/
 	}
 	else
 	{
@@ -129,9 +155,9 @@ static int SetComParms() {
 	}
 
 	// Set our own parameters from Globals
-	dcb.BaudRate = nComRate;						// Baud (bit) rate
-	dcb.ByteSize = (BYTE)nComBits;					// Number of bits(8)
-	dcb.Parity = 0;									// No parity	
+	dcb.BaudRate = CBR_9600;						// Baud (bit) rate
+	dcb.ByteSize = COMBYTESIZE;					// Number of bits(8)
+	dcb.Parity = NOPARITY;									// No parity	
 	dcb.StopBits = ONESTOPBIT;						// One stop bit
 	if (!SetCommState(hCom, &dcb))
 	{
