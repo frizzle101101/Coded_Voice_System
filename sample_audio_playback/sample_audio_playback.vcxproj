@@ -144,6 +144,7 @@
   <ItemGroup>
     <ClCompile Include="console.cpp" />
     <ClCompile Include="demo.cpp" />
+    <ClCompile Include="header.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="queue.cpp" />
@@ -153,6 +154,7 @@
   <ItemGroup>
     <ClInclude Include="console.h" />
     <ClInclude Include="demo.h" />
+    <ClInclude Include="header.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />

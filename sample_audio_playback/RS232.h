@@ -5,7 +5,7 @@
 void initPort(); 
 void purgePort();
 void outputToPort(LPCVOID buf, DWORD szBuf);
-int inputFromPort(LPVOID buf, DWORD szBuf);
+int inputFromPort(LPVOID *rcvPayload);
 
 // Sub functions
 void createPortFile();

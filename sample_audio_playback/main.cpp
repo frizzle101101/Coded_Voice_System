@@ -9,6 +9,7 @@
 #include "demo.h"
 #include "RS232.h"
 #include "queue.h"
+#include "header.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
@@ -18,12 +19,15 @@ int	main(int argc, char *argv[])
 {
 	char option;
 	short *audio_buff = NULL;
+	short *audio_rcv = NULL;
 	int sample_sec = DEFAULT_SAMPLES_SEC;
 	int record_time = DEFAULT_RECORD_TIME;
 	long audio_buff_sz = sample_sec * record_time;
 	unsigned int rcvStatus = 0;
 	QUEUE *rcvQ;
 	NODE *tmp;
+	HEADER *tmpHdr, *rcvHdr;
+	void *payload, *rcvPayload;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
@@ -55,10 +59,10 @@ int	main(int argc, char *argv[])
 					break;
 				}
 			case '3':
-				RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
-				CloseRecording();
+				tmpHdr = header_init();
+				payload = payload_pack(tmpHdr, audio_buff);
 				initPort();
-				outputToPort(audio_buff, audio_buff_sz);			// Send audio to port
+				outputToPort(payload, _msize(payload));			// Send audio to port
 				purgePort();									// Purge the port
 				CloseHandle(getCom());							// Closes the handle pointing to the COM port
 				break;
@@ -69,7 +73,7 @@ int	main(int argc, char *argv[])
 				int entered;
 				SYSTEMTIME timeoutWatch;
 				GetSystemTime(&timeoutWatch);
-				while ((rcvStatus = inputFromPort(audio_buff, audio_buff_sz)) == 0)					// Receive string from port
+				while ((rcvStatus = inputFromPort(&rcvPayload)) == 0)					// Receive string from port
 				{
 					
 					SYSTEMTIME currTime;
@@ -92,6 +96,10 @@ int	main(int argc, char *argv[])
 					}
 				}
 
+				payload_unpack(&rcvHdr, &audio_rcv, rcvPayload);
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				ClosePlayback();
+
 				if (rcvStatus) {
 					tmp = (NODE *)malloc(sizeof(NODE));
 					tmp->data = audio_buff;
@@ -105,10 +113,18 @@ int	main(int argc, char *argv[])
 				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
 				break;
 			case '6':
-				
+				printf("Packaging...\n");
+				tmpHdr = header_init();
+				payload = payload_pack(tmpHdr, audio_buff);
+
+				printf("Unpacking and play...\n");
+				if (payload) {
+					payload_unpack(&rcvHdr, &audio_rcv, payload);
 					printf("Playing..\n");
-					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+					PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 					ClosePlayback();
+				}
+				_sleep(2000);
 				break;
 			default:
 				printf("Please Enter a valid option 1-4!\n");

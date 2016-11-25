@@ -45,7 +45,7 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 	i = WriteFile(
 		hCom,										// Write handle pointing to COM port
 		buf1,										// Buffer size
-		szBuf * 2,										// Size of buffer
+		szBuf,										// Size of buffer
 		&NumberofBytesTransmitted,					// Written number of bytes
 		NULL
 	);
@@ -61,7 +61,7 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 		printf("\nSuccessful transmission, there were %ld bytes transmitted\n", NumberofBytesTransmitted);
 }
 
-int inputFromPort(LPVOID buf, DWORD szBuf) {
+int inputFromPort(LPVOID *rcvPayload) {
 	int i = 0;
 	DWORD NumberofBytesRead;
 	DWORD dwCommEvent;
@@ -69,6 +69,7 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 	LPCOMSTAT lpStat = 0;
 	char tmp;
 	char serial[MAX_STACK_SIZE];
+	LPVOID payload;
 
 	if (!SetCommMask(hCom, EV_RXCHAR))
 		printf("\SetCommMask Error: 0x%x\n", GetLastError());
@@ -90,7 +91,11 @@ int inputFromPort(LPVOID buf, DWORD szBuf) {
 
 		printf("Total bytes read: %d\n", i);
 
-		memcpy(buf, serial, i);
+		payload = malloc(sizeof(char) * i);
+
+		memcpy(payload, serial, i);
+
+		*rcvPayload = payload;
 		/*
 		i = ReadFile(
 			hCom,										// Read handle pointing to COM port
