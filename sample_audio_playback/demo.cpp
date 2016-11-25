@@ -22,9 +22,12 @@ void menu(int sample_sec, int record_time)
 
 void cp_menu() 
 {
+	printf("Set Parameters\n");
 	printf("1 - Change SAMPLE SECOND\n");
 	printf("2 - Change Record Time\n");
-	printf("3 - Back to Main Menu\n");
+	printf("3 - Change COM Port\n");
+	printf("4 - Change Baud Rate\n");
+	printf("5 - Back to Main Menu\n");
 }
 
 void getNewParam(int *sample_sec, int *record_time)
@@ -41,7 +44,7 @@ void getNewParam(int *sample_sec, int *record_time)
 	} while ((*sample_sec <= 0) && (*sample_sec > 64));
 
 	do {
-		printf("Please enter sample second\n");
+		printf("Please enter record time\n");
 		fgets(tmp, MAX_TMP_BUFF, stdin);
 		*record_time = (int)strtol(tmp, &ptr, 10);
 		system("CLS");

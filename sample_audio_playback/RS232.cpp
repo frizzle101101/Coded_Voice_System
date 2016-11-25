@@ -14,7 +14,6 @@
 #define PORT "\\\\.\\COM11"
 #define MAX_STACK_SIZE 1000000
 static HANDLE hCom;										// Pointer to a COM port
-//int nComRate = 9600;								// Baud (Bit) rate in bits/second 
 #define COMBYTESIZE  8									// Number of bits per frame
 COMMTIMEOUTS timeout;								// A commtimout struct variable
 
