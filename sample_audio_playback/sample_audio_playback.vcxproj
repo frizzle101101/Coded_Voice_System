@@ -148,9 +148,6 @@
     <ClCompile Include="header.cpp" />
     <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
-    <ClCompile Include="menu.cpp" />
-    <ClCompile Include="MENUCPY.cpp" />
-    <ClCompile Include="phonebook.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="record.cpp" />
@@ -162,8 +159,6 @@
     <ClInclude Include="demo.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="huffman.h" />
-    <ClInclude Include="menu.h" />
-    <ClInclude Include="phonebook.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />
