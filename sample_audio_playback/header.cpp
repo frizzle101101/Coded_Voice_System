@@ -46,6 +46,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 	//HEADER *tmpHdr;
 	void *tmp;
 	void *compressedContent;
+	short *pkgedCompressedContent;
 	void *decompressedContent;
 	if ((!usrHeader) || (_msize(usrHeader) != 32)) {
 		printf("Invalid Header!\n");
@@ -64,17 +65,20 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 
 	if (usrHeader->flags & HUFFMAN_F) {
 		compressedContent = huffman_cmp_wrapper(contentBuf, &usrHeader->clDataLength);
-		printf("msize contentBuf:%d, msize compressedContent:%d cldatalength:%d\n", _msize(contentBuf), _msize(compressedContent), usrHeader->clDataLength * 2);
+		pkgedCompressedContent = (short *)malloc(sizeof(short) *usrHeader->clDataLength);
+		memmove_s(pkgedCompressedContent, _msize(pkgedCompressedContent), compressedContent, usrHeader->clDataLength);
+		printf("msize pkgedCompressedContent:%d cldatalength:%d\n", _msize(pkgedCompressedContent), usrHeader->clDataLength);
 		printf("Post-compressed test\n");
-		PlayBuffer((short *)huffman_decmp_wrapper(compressedContent, usrHeader->lDataLength), 16000, 8000);
+		PlayBuffer((short *)huffman_decmp_wrapper(pkgedCompressedContent, usrHeader->lDataLength), 16000, 8000);
 
 		
 		//printf("%d\n", usrHeader->clDataLength);
-		tmp = malloc(sizeof(HEADER) + usrHeader->clDataLength * 2);
+		tmp = malloc(sizeof(HEADER) + _msize(pkgedCompressedContent));
 		memcpy_s(tmp, _msize(tmp), usrHeader, _msize(usrHeader));
-		memcpy_s((char *)tmp + sizeof(HEADER), _msize(tmp), compressedContent, usrHeader->clDataLength * 2);
+		memcpy_s((char *)tmp + sizeof(HEADER), _msize(tmp), pkgedCompressedContent, _msize(pkgedCompressedContent));
 		printf("Post-packpaged Pre-send test\n");
-		payload_unpack(NULL, NULL, tmp);
+		printf("msize tmp:%d\n", _msize(tmp));
+		//payload_unpack(NULL, NULL, tmp);
 
 	} else {
 		tmp = malloc(sizeof(HEADER) + _msize(contentBuf));
@@ -97,18 +101,19 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 	
 	header_check(tmpHdr);
 
-	//*usrHeader = tmpHdr;
+	if(usrHeader)
+		*usrHeader = tmpHdr;
 
 
 	if (tmpHdr->flags & HUFFMAN_F) {
 		printf("unpack(): cldatalength: %d\n", tmpHdr->clDataLength);
 		compressed_content = (short *)malloc(sizeof(short) * tmpHdr->clDataLength);
 		rcvAudio = (short *)malloc(sizeof(short) *tmpHdr->lDataLength);
-		memmove_s(compressed_content, _msize(compressed_content), (char *)payload + sizeof(HEADER) + 1, tmpHdr->clDataLength);
+		memmove_s(compressed_content, _msize(compressed_content), (char *)payload + sizeof(HEADER), tmpHdr->clDataLength);
 		printf("Decompressed test\n");
-		PlayBuffer((short *)huffman_decmp_wrapper(compressed_content, tmpHdr->lDataLength), (long)16000, 8000);
+		//PlayBuffer((short *)huffman_decmp_wrapper(compressed_content, tmpHdr->lDataLength), (long)16000, 8000);
 		rcvAudio = (short *)huffman_decmp_wrapper(compressed_content, tmpHdr->lDataLength);
-		PlayBuffer(rcvAudio, (long)16000, 8000);
+		//PlayBuffer(rcvAudio, (long)16000, 8000);
 		*audioBuf = rcvAudio;
 	} else {
 		rcvAudio_u = (short *)malloc(sizeof(short) *tmpHdr->lDataLength);

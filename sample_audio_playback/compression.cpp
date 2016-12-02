@@ -26,11 +26,12 @@ void *huffman_cmp_wrapper(void *content, long *cmprsed_size)
 void *huffman_decmp_wrapper(void *content, long ldatalength)
 {
 	short *decompressed;
-	decompressed = (short *)malloc(ldatalength);
+	decompressed = (short *)malloc(sizeof(short) *ldatalength);
 
 	printf("huffman_decmp_wrapper(). size content %d\n", _msize(content));
 	printf("huffman_decmp_wrapper(). size decompressed %d\n", _msize(decompressed));
 	Huffman_Uncompress((unsigned char *)content, (unsigned char *)decompressed, _msize(content), _msize(decompressed));
 
+	//PlayBuffer((short *)decompressed, (long)16000, 8000);
 	return decompressed;
 }
