@@ -61,7 +61,10 @@ int	main(int argc, char *argv[])
 			case '3':
 				tmpHdr = header_init();
 				payload = payload_pack(tmpHdr, audio_buff);
+				payload_unpack(&rcvHdr, &audio_rcv, payload);
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				initPort();
+				printf("sending..%d", _msize(payload));
 				outputToPort(payload, _msize(payload));			// Send audio to port
 				purgePort();									// Purge the port
 				CloseHandle(getCom());							// Closes the handle pointing to the COM port

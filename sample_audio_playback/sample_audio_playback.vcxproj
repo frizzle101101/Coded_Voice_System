@@ -142,9 +142,11 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="compression.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="demo.cpp" />
     <ClCompile Include="header.cpp" />
+    <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="queue.cpp" />
@@ -152,9 +154,11 @@
     <ClCompile Include="RS232.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="compression.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="demo.h" />
     <ClInclude Include="header.h" />
+    <ClInclude Include="huffman.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />

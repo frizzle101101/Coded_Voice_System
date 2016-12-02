@@ -75,6 +75,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 
 	if (WaitCommEvent(hCom,&dwCommEvent,NULL))
 	{
+		printf("Incoming message...\n");
 		do
 		{
 			ReadFile(hCom,              //Handle of the Serial port
@@ -83,13 +84,14 @@ int inputFromPort(LPVOID *rcvPayload) {
 				&NumberofBytesRead,    //Number of bytes read
 				NULL);
 
-			printf("%d ", i);
+			printf(".");
+			//printf("%d ", i);
 			serial[i] = tmp;// Store Tempchar into buffer
 			i++;
 		} while (NumberofBytesRead > 0);
 
-		printf("Total bytes read: %d\n", i);
-
+		printf("Total bytes received!: %d\n", i);
+		_sleep(1000);
 		payload = malloc(sizeof(char) * i);
 
 		memcpy(payload, serial, i);
@@ -159,7 +161,7 @@ static int SetComParms() {
 	}
 
 	// Set our own parameters from Globals
-	dcb.BaudRate = CBR_9600;						// Baud (bit) rate
+	dcb.BaudRate = CBR_38400;						// Baud (bit) rate
 	dcb.ByteSize = COMBYTESIZE;					// Number of bits(8)
 	dcb.Parity = NOPARITY;									// No parity	
 	dcb.StopBits = ONESTOPBIT;						// One stop bit
