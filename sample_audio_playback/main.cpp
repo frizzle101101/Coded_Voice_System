@@ -22,6 +22,7 @@ int	main(int argc, char *argv[])
 	short *audio_rcv = NULL;
 	int sample_sec = DEFAULT_SAMPLES_SEC;
 	int record_time = DEFAULT_RECORD_TIME;
+	char *stationID = NULL;
 	long audio_buff_sz = sample_sec * record_time;
 	unsigned int rcvStatus = 0;
 	QUEUE *rcvQ;
@@ -61,8 +62,8 @@ int	main(int argc, char *argv[])
 			case '3':
 				tmpHdr = header_init();
 				payload = payload_pack(tmpHdr, audio_buff);
-				payload_unpack(&rcvHdr, &audio_rcv, payload);
-				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				//payload_unpack(&rcvHdr, &audio_rcv, payload);
+				//PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				initPort();
 				printf("sending..%d", _msize(payload));
 				outputToPort(payload, _msize(payload));			// Send audio to port
@@ -99,7 +100,12 @@ int	main(int argc, char *argv[])
 					}
 				}
 
-				payload_unpack(&rcvHdr, &audio_rcv, rcvPayload);
+				if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
+					printf("DETECT ERRONEOUS MESSAGE\n");
+					_sleep(3000);
+					break;
+				}
+
 				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				ClosePlayback();
 

@@ -7,28 +7,98 @@
 #include "compression.h"
 #include "playback.h"
 
-#define DEADBEEF 0xDEADBEEF
-#define PATTERN  "\x55\xaa\x55\xaa"
-#define AUDIO_F     (1 << 0)
-#define TEXT_F      (1 << 1)
-#define HUFFMAN_F   (1 << 2)
-#define RLE_F       (1 << 3)
-
-static void header_check(HEADER *usrHeader)
+static int repetition_vote(HEADER *usrHeader)
 {
+	int voteCount = 0;
+
+	printf("0x%02x 0x%02x\n", stationID, usrHeader->rcverID);
+	if (usrHeader->rcverID == stationID) 
+		voteCount++;
+
+	if (usrHeader->rcverID_rp1 == stationID)
+		voteCount++;
+
+	if (usrHeader->rcverID_rp2 == stationID)
+		voteCount++;
+
+	if (usrHeader->rcverID_rp3 == stationID)
+		voteCount++;
+	
+	if (voteCount >= 3)
+		return 0;
+	else
+		return -EINVAL;
+}
+
+static int header_check(HEADER *usrHeader)
+{
+	int rc = 0;
+
 	printf("Header Checks\n");
+	rc = repetition_vote(usrHeader);
+
+	if (rc) {
+		return rc;
+	}
+
+	printf("Station Sender ID %04x\n", usrHeader->senderID);
 	printf("Header Size:%d bytes\n", _msize(usrHeader));
 	printf("lSignature: %04x\n", usrHeader->lSignature);
 	printf("bVersion: %d\n", usrHeader->bVersion);
 	printf("bPattern: %04x\n", usrHeader->bPattern);
 	printf("ldatalength: %d\n", usrHeader->lDataLength);
 	printf("cldatalength: %d\n", usrHeader->clDataLength);
+
+	return rc;
+}
+
+static int populateIDs(HEADER *usrHeader)
+{
+	int rc = 0;
+
+	if (!usrHeader) {
+		rc = -EINVAL;
+	} else {
+		usrHeader->senderID = stationID;
+		usrHeader->rcverID = targetID;
+		usrHeader->rcverID_rp1 = targetID;
+		usrHeader->rcverID_rp2 = targetID;
+		usrHeader->rcverID_rp3 = targetID;
+		printf("0x%02x 0x%02x\n", stationID, usrHeader->rcverID);
+	}
+	return rc;
+}
+
+int setStationID(char *inputID)
+{
+	int rc = 0;
+
+	if (inputID)
+		stationID = *inputID;
+	else
+		rc = -EINVAL;
+
+	return rc;
+}
+
+int setTargetID(char *inputID)
+{
+	int rc = 0;
+
+	if (inputID)
+		targetID = *inputID;
+	else
+		rc = -EINVAL;
+
+	return rc;
 }
 
 HEADER *header_init()
 {
+	int rc;
 	HEADER *tmp;
 	long deadbeef = 0xDEADBEEF;
+	printf("sizeof header%d\n", sizeof(HEADER));
 	tmp = (HEADER *)malloc(sizeof(HEADER));
 	memcpy(tmp->bPattern, PATTERN, strlen(PATTERN));
 	tmp->bVersion = 1;
@@ -38,6 +108,7 @@ HEADER *header_init()
 	tmp->flags = 0;
 	tmp->flags |= AUDIO_F;
 	tmp->flags |= HUFFMAN_F;
+	populateIDs(tmp);
 	return tmp;
 }
 
@@ -48,7 +119,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 	void *compressedContent;
 	short *pkgedCompressedContent;
 	void *decompressedContent;
-	if ((!usrHeader) || (_msize(usrHeader) != 32)) {
+	if ((!usrHeader) || (_msize(usrHeader) != HEADERSIZE)) {
 		printf("Invalid Header!\n");
 		errno = EINVAL;
 		return NULL;
@@ -89,6 +160,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 }
 int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 {
+	int rc = 0;
 	HEADER *tmpHdr;
 	short *rcvAudio;
 	short *rcvAudio_u;
@@ -99,7 +171,11 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 
 	memmove_s(tmpHdr, sizeof(HEADER), payload, sizeof(HEADER));
 	
-	header_check(tmpHdr);
+	rc = header_check(tmpHdr);
+
+	if (rc) {
+		return rc;
+	}
 
 	if(usrHeader)
 		*usrHeader = tmpHdr;
