@@ -75,7 +75,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 
 	if (WaitCommEvent(hCom,&dwCommEvent,NULL))
 	{
-		printf("Incoming message...\n");
+		printf("Incoming message receiving in process...\n");
 		do
 		{
 			ReadFile(hCom,              //Handle of the Serial port
@@ -97,28 +97,12 @@ int inputFromPort(LPVOID *rcvPayload) {
 		memcpy(payload, serial, i);
 
 		*rcvPayload = payload;
-		/*
-		i = ReadFile(
-			hCom,										// Read handle pointing to COM port
-			buf,										// Buffer size
-			szBuf * 2,  									// Size of buffer - Maximum number of bytes to read
-			&NumberofBytesRead,
-			NULL
-			);
-		
 
-		_sleep(2000);
-		// Handle the timeout error
-		if (i == 0 ) {
-			printf("\nRead Error: 0x%x\n", GetLastError());
-			ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.
-			return(-1);
-		}*/
-	}
-	else
+		return i;
+	} else
 	{
 		printf("\n>No Reception from Partner Com Client!\n");
-		return(0);
+		return -1;
 	}
 	
 		

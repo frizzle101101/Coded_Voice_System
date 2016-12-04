@@ -24,7 +24,6 @@ int	main(int argc, char *argv[])
 	int record_time = DEFAULT_RECORD_TIME;
 	char *stationID = NULL;
 	long audio_buff_sz = sample_sec * record_time;
-	unsigned int rcvStatus = 0;
 	QUEUE *rcvQ;
 	NODE *tmp;
 	HEADER *tmpHdr, *rcvHdr;
@@ -72,26 +71,26 @@ int	main(int argc, char *argv[])
 				break;
 			case '4':
 				initPort();
-				printf("Press ESC to return to menu\n");
-				while ((rcvStatus = inputFromPort(&rcvPayload)) == 0) {}					// Receive string from port
 
+				inputFromPort(&rcvPayload);
 
 				if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
 					printf("DETECT ERRONEOUS MESSAGE\n");
 					_sleep(3000);
+					purgePort();									
+					CloseHandle(getCom());							
 					break;
 				}
 
 				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				ClosePlayback();
 
-				if (rcvStatus) {
-					tmp = (NODE *)malloc(sizeof(NODE));
-					tmp->data = audio_buff;
-					enqueue(rcvQ, tmp);
-				}
-				purgePort();									// Purge the port
-				CloseHandle(getCom());							// Closes the handle pointing to the COM port
+				tmp = (NODE *)malloc(sizeof(NODE));
+				tmp->data = audio_rcv;
+				enqueue(rcvQ, tmp);
+
+				purgePort();
+				CloseHandle(getCom());
 				break;
 			case '5':
 				getNewParam(&sample_sec, &record_time);
@@ -110,6 +109,9 @@ int	main(int argc, char *argv[])
 					ClosePlayback();
 				}
 				_sleep(2000);
+				break;
+			case '7':
+				printf("Dequeueing\n");
 				break;
 			default:
 				printf("Please Enter a valid option 1-4!\n");
