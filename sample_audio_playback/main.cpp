@@ -72,33 +72,9 @@ int	main(int argc, char *argv[])
 				break;
 			case '4':
 				initPort();
-				//get current time for timeout reference
 				printf("Press ESC to return to menu\n");
-				int entered;
-				SYSTEMTIME timeoutWatch;
-				GetSystemTime(&timeoutWatch);
-				while ((rcvStatus = inputFromPort(&rcvPayload)) == 0)					// Receive string from port
-				{
-					
-					SYSTEMTIME currTime;
-					GetSystemTime(&currTime);
-					if (currTime.wMinute > timeoutWatch.wMinute)
-					{
-						if (currTime.wSecond + 60 - WAITTIME > timeoutWatch.wSecond)
-						{
-							printf("\nTimeout(%d)\n", WAITTIME);
-							break;
-						}
-					}
-					else
-					{
-						if (currTime.wSecond - WAITTIME > timeoutWatch.wSecond)
-						{
-							printf("\nTimeout(%d)\n", WAITTIME);
-							break;
-						}
-					}
-				}
+				while ((rcvStatus = inputFromPort(&rcvPayload)) == 0) {}					// Receive string from port
+
 
 				if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
 					printf("DETECT ERRONEOUS MESSAGE\n");
