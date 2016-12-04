@@ -6,6 +6,7 @@
 #include "header.h"
 #include "compression.h"
 #include "playback.h"
+#include "hash.h"
 
 static int repetition_vote(HEADER *usrHeader)
 {
@@ -52,6 +53,15 @@ static int header_check(HEADER *usrHeader)
 	return rc;
 }
 
+static int hash_check(HEADER *usrHeader, void *content)
+{
+	int rc;
+	(usrHeader->contentHash == uni_str_hash((char *)content, DEFAULT_MOD)) ? rc = 0 : rc = -1;
+
+	printf("hash rc %d", rc);
+
+	return rc;
+}
 static int populateIDs(HEADER *usrHeader)
 {
 	int rc = 0;
@@ -119,6 +129,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 	void *compressedContent;
 	short *pkgedCompressedContent;
 	void *decompressedContent;
+	//printf("header size %d", _msize(usrHeader));
 	if ((!usrHeader) || (_msize(usrHeader) != HEADERSIZE)) {
 		printf("Invalid Header!\n");
 		errno = EINVAL;
@@ -131,9 +142,12 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 		return NULL;
 	}
 
+	usrHeader->contentHash = uni_str_hash((char *)contentBuf, DEFAULT_MOD);
+
 	//printf("Pre-compressed test\n");
 	//PlayBuffer((short *)contentBuf, (long)16000, 8000);
 
+	
 	if (usrHeader->flags & HUFFMAN_F) {
 		compressedContent = huffman_cmp_wrapper(contentBuf, &usrHeader->clDataLength);
 		pkgedCompressedContent = (short *)malloc(sizeof(short) *usrHeader->clDataLength);
@@ -173,12 +187,12 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 	
 	rc = header_check(tmpHdr);
 
-	if (rc) {
+	if (rc)
 		return rc;
-	}
 
 	if(usrHeader)
 		*usrHeader = tmpHdr;
+
 
 
 	if (tmpHdr->flags & HUFFMAN_F) {
@@ -191,12 +205,22 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 		rcvAudio = (short *)huffman_decmp_wrapper(compressed_content, tmpHdr->lDataLength);
 		//PlayBuffer(rcvAudio, (long)16000, 8000);
 		*audioBuf = rcvAudio;
+
+		rc = hash_check(tmpHdr, rcvAudio);
+
+		if (rc)
+			return rc;
+
 	} else {
 		rcvAudio_u = (short *)malloc(sizeof(short) *tmpHdr->lDataLength);
 		memmove_s(rcvAudio_u, _msize(rcvAudio_u), (char *)payload + sizeof(HEADER), tmpHdr->lDataLength);
 		*audioBuf = rcvAudio_u;
-	}
 
+		rc = hash_check(tmpHdr, rcvAudio_u);
+
+		if (rc)
+			return rc;
+	}
 	
 	return 0;
 }

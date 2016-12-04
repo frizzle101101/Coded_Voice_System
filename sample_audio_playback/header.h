@@ -10,9 +10,9 @@ typedef struct {
 	long lDataLength;
 	long clDataLength;
 	char flags;
-	char TBD[6];
 	char rcverID_rp3;
 	char bPattern[4];
+	int contentHash;
 } HEADER;
 
 #define DEADBEEF 0xDEADBEEF
