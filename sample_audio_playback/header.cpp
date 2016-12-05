@@ -103,7 +103,7 @@ int setTargetID(char *inputID)
 	return rc;
 }
 
-HEADER *header_init()
+HEADER *header_init(char *prio)
 {
 	int rc;
 	HEADER *tmp;
@@ -119,6 +119,7 @@ HEADER *header_init()
 	tmp->flags |= AUDIO_F;
 	tmp->flags |= HUFFMAN_F;
 	populateIDs(tmp);
+	tmp->priority = *prio;
 	return tmp;
 }
 
@@ -129,7 +130,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 	void *compressedContent;
 	short *pkgedCompressedContent;
 	void *decompressedContent;
-	//printf("header size %d", _msize(usrHeader));
+	printf("header size %d", _msize(usrHeader));
 	if ((!usrHeader) || (_msize(usrHeader) != HEADERSIZE)) {
 		printf("Invalid Header!\n");
 		errno = EINVAL;
@@ -192,8 +193,6 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 
 	if(usrHeader)
 		*usrHeader = tmpHdr;
-
-
 
 	if (tmpHdr->flags & HUFFMAN_F) {
 		printf("unpack(): cldatalength: %d\n", tmpHdr->clDataLength);

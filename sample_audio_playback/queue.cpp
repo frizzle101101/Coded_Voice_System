@@ -154,3 +154,36 @@ int destroy_queue(QUEUE *userQ)
 
 	return rc;
 }
+
+/******************************************************************************
+This function prints all the data in the Queue recursively from queue's head
+to queue's tail.
+@param   inNode     A pointer that points to the queue's head.
+@return   NONE
+******************************************************************************/
+void printQ_recurFW(NODE *inNode)
+{
+	static int i = 1;
+
+	printf("FW %d:%s\n", i, inNode->data);
+	i++;
+
+	if (inNode->next != NULL)
+		printQ_recurFW(inNode->next);
+}
+
+/******************************************************************************
+This function prints all the data in the Queue recursively from queue's tail
+to queue's head.
+@param   inNode     A pointer that points to the queue's head.
+@return   NONE
+******************************************************************************/
+void printQ_recurBW(NODE *inNode)
+{
+	static int i = 1;
+	if (inNode->next != NULL)
+		printQ_recurBW(inNode->next);
+
+	printf("BW %d: %s\n", i, inNode->data);
+	i++;
+}

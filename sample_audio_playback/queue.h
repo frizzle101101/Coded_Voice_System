@@ -13,3 +13,5 @@ int enqueue(QUEUE *userQ, NODE *userNode);
 NODE *dequeue(QUEUE *userQ);
 int print_Queue(QUEUE *userQ);
 int destroy_queue(QUEUE *userQ);
+void printQ_recurFW(NODE *inNode);
+void printQ_recurBW(NODE *inNode);

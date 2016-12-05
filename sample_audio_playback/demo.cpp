@@ -51,6 +51,17 @@ void getNewParam(int *sample_sec, int *record_time)
 	} while ((*record_time <= 0) && (*record_time > 64));
 }
 
+void setPriority(char * prio)
+{
+	char tmp[MAX_TMP_BUFF];
+	char *ptr;
+	do {
+		printf("Please enter transmit priority from 0 - 255 (0 - highest priorty)\n");
+		fgets(tmp, MAX_TMP_BUFF, stdin);
+		*prio = (int)strtol(tmp, &ptr, 10);
+		system("CLS");
+	} while ((*prio <= 0) && (*prio > 255));
+}
 
 void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)
 {

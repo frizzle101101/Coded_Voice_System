@@ -1,18 +1,21 @@
 #pragma once
 
 typedef struct {
-	char senderID;
-	char rcverID;
-	char rcverID_rp1;
 	long lSignature;
-	char bVersion;
-	char rcverID_rp2;
+	char rcverID;
+	char senderID;
+	char priority;
+	char rcverID_rp1;
 	long lDataLength;
 	long clDataLength;
-	char flags;
-	char rcverID_rp3;
-	char bPattern[4];
+	char rcverID_rp2;
+	char bVersion;
+	short sampleSec;
 	int contentHash;
+	char rcverID_rp3;
+	char flags;
+	short recordTime;
+	char bPattern[4];
 } HEADER;
 
 #define DEADBEEF 0xDEADBEEF
@@ -28,6 +31,6 @@ typedef struct {
 static char stationID = DEFAULT_STATION_ID;
 static char targetID = DEFAULT_TARGET_ID;
 
-HEADER *header_init();
+HEADER *header_init(char *prio);
 void *payload_pack(HEADER *usrHeader, void *contentBuf);
 int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload);

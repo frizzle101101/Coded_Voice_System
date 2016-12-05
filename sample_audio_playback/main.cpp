@@ -18,6 +18,7 @@
 int	main(int argc, char *argv[])
 {
 	char option;
+	char transmitPrio = 0;
 	short *audio_buff = NULL;
 	short *audio_rcv = NULL;
 	int sample_sec = DEFAULT_SAMPLES_SEC;
@@ -59,7 +60,7 @@ int	main(int argc, char *argv[])
 					break;
 				}
 			case '3':
-				tmpHdr = header_init();
+				tmpHdr = header_init(&transmitPrio);
 				payload = payload_pack(tmpHdr, audio_buff);
 				//payload_unpack(&rcvHdr, &audio_rcv, payload);
 				//PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
@@ -94,11 +95,12 @@ int	main(int argc, char *argv[])
 				break;
 			case '5':
 				getNewParam(&sample_sec, &record_time);
+				setPriority(&transmitPrio);
 				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
 				break;
 			case '6':
 				printf("Packaging...\n");
-				tmpHdr = header_init();
+				tmpHdr = header_init(&transmitPrio);
 				payload = payload_pack(tmpHdr, audio_buff);
 
 				printf("Unpacking and play...\n");
@@ -112,6 +114,8 @@ int	main(int argc, char *argv[])
 				break;
 			case '7':
 				printf("Dequeueing\n");
+				while ((tmp = dequeue(rcvQ)) != NULL)
+					PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
 				break;
 			default:
 				printf("Please Enter a valid option 1-4!\n");
