@@ -48,6 +48,9 @@
     <ClCompile Include="hash.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="prioQueue.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h">
@@ -78,6 +81,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="hash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="prioQueue.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

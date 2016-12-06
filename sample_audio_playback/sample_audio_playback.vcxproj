@@ -150,6 +150,7 @@
     <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="playback.cpp" />
+    <ClCompile Include="prioQueue.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="record.cpp" />
     <ClCompile Include="RS232.cpp" />
@@ -162,6 +163,7 @@
     <ClInclude Include="header.h" />
     <ClInclude Include="huffman.h" />
     <ClInclude Include="playback.h" />
+    <ClInclude Include="prioQueue.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />
     <ClInclude Include="RS232.h" />
