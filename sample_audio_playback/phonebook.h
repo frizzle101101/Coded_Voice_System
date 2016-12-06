@@ -6,8 +6,8 @@
 */
 
 
-#ifndef TREES_H
-#define TREES_H
+#ifndef PHONEBOOK_H
+#define PHONEBOOK_H
 /* ^^ The above are include guards to prevent repeats of the prototyoes */
 #define STRMAX 140
 //Structures for linked list
@@ -19,21 +19,14 @@ typedef struct
 	char name[140];
 }SRUser;
 
-typedef struct node *link;
-struct node
+typedef struct pbnode *link;
+struct pbnode
 {
 	link pLeft, pRight;
 	SRUser Data;
 };
-typedef struct node BSTS;
-
-typedef struct node *link;
-struct node
-{
-	link pLeft, pRight;
-	SRUser Data;
-};
-typedef struct node BSTR;
+typedef struct pbnode PBR;
+typedef struct pbnode PBS;
 
 //Queue linked list
 static SRUser NullItem = {};
@@ -45,14 +38,15 @@ void BSTSInit(void);
 void BSTRInit(void);
 link NEW(SRUser item, link left, link right);
 link BSTInsert(link h, SRUser item);
-void Insert(SRUser item);
-static link BSTInsertH(link h, SRUser item);
-void InsertH(SRUser item);
+void InsertR(SRUser item);
+void InsertS(SRUser item);
 SRUser BSTSearch(link h, char *szSearchKey);
 SRUser Search(char *szKey);
 int count(link h);
 int height(link h);
 void BSTPrint(link h);
-link getHead(void);
-void setHeadNULL(void);
+link getHeadR(void);
+link getHeadS(void);
+void setHeadRNULL(void);
+void setHeadSNULL(void);
 #endif

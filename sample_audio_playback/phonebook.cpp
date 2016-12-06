@@ -36,7 +36,6 @@ link NEW(SRUser item, link left, link right) {
 static link BSTInsert(link h, SRUser item) {
 	int	 rc;
 	if (h == NULL) return(NEW(item, NULL, NULL));
-	rc = strcmp(item.name, h->Data.name); // Go left or right?
 	if (rc < 0)
 		h->pLeft = BSTInsert(h->pLeft, item);
 	else
@@ -44,26 +43,13 @@ static link BSTInsert(link h, SRUser item) {
 	return(h);  // pointer to newly added node
 }
 //interface for insert
-void Insert(link h, SRUser item)
+void InsertR(SRUser item)
 {
-	h = BSTInsert(h, item);
+	headR = BSTInsert(headR, item);
 }
-
-// Insert a key in the hash BST in order of hash key. 
-static link BSTInsertH(link h, SRUser item) {
-	int	 rc;
-	if (h == NULL) return(NEW(item, NULL, NULL));
-
-	if (item.key < h->Data.key)
-		h->pLeft = BSTInsert(h->pLeft, item);
-	else
-		h->pRight = BSTInsert(h->pRight, item);
-	return(h);  // pointer to newly added node
-}
-//interface for hash insert
-void InsertH(SRUser item)
+void InsertS(SRUser item)
 {
-	head = BSTInsertH(head, item);
+	headS = BSTInsert(headS, item);
 }
 
 // Search for a key in the BST (using szKey in struct Item)
@@ -76,8 +62,8 @@ static SRUser BSTSearch(link h, char *szSearchKey) {
 	else		   return(BSTSearch(h->pRight, szSearchKey));
 }
 //interface for search
-SRUser Search(link h, char *szKey) {
-	return(BSTSearch(h, szKey));
+SRUser Search(char *szKey) {
+	return(BSTSearch(headR, szKey));
 }
 
 // count the number of nodes in a tree
@@ -105,12 +91,22 @@ void BSTPrint(link h)
 	return;
 }
 
-link getHead(void)
+link getHeadR(void)
 {
-	return(head);
+	return(headR);
 }
 
-void setHeadNULL(void)
+link getHeadS(void)
 {
-	head = NULL;
+	return(headS);
+}
+
+void setHeadRNULL(void)
+{
+	headR = NULL;
+}
+
+void setHeadSNULL(void)
+{
+	headS = NULL;
 }
