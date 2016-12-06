@@ -10,8 +10,6 @@
 #include "RS232.h"
 #include "queue.h"
 #include "header.h"
-#include "menu.h"
-#include "phonebook.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
@@ -35,170 +33,108 @@ int	main(int argc, char *argv[])
 	tmp = (NODE *)malloc(sizeof(NODE));
 
 	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
-	char input[MAX];
-	char *str1;
-	char check[MAX];
-	int checker;
-	OPTIONS options;
-	//gets_s(input);
-	char *rName;
-	SRUser newuser;
-	link left = NULL;
-	link right = NULL;
 
 	while (1) {
-		gets_s(input);
-		for (int i = 0; input[i]; i++) {
-			input[i] = tolower(input[i]);
-		}
-		str1 = strtok(input, " -");
-		if (strcmp("help", str1) == 0)
-		{
-			str1 = strtok(NULL, " -");
-			if (str1 == NULL)
-				options = HELP;
-			else if (strcmp("compose", str1) == 0)
-				options = HELPCOMPOSE;
-			else if (strcmp("display", str1) == 0)
-				options = HELPDISPLAY;
-			else if (strcmp("playback", str1) == 0)
-				options = HELPPLAYBACK;
-			else if (strcmp("receive", str1) == 0)
-				options = HELPRECEIVE;
-			else if (strcmp("record", str1) == 0)
-				options = HELPRECORD;
-			else if (strcmp("select", str1) == 0)
-				options = HELPSELECT;
-			else if (strcmp("select", str1) == 0)
-				options = HELPINSERT;
-			else if (strcmp("settings", str1) == 0)
-				options = HELPSETTINGS;
-			else if (strcmp("remove", str1) == 0)
-				options = HELPREMOVE;
-		}
-		else if (strcmp("compose", str1) == 0)
-			options = COMPOSE;
-		else if (strcmp("display", str1) == 0)
-			options = DISPLAY;
-		else if (strcmp("playback", str1) == 0)
-			options = PLAYBACK;
-		else if (strcmp("receive", str1) == 0)
-			options = RECEIVE;
-		else if (strcmp("record", str1) == 0)
-			options = RECORD;
-		else if (strcmp("select", str1) == 0)
-		{
-			char *tempId = strtok(NULL, " -");
-			if (tempId == NULL)
-				options = SELECT;
-			str1 = strtok(NULL, " -");
-			if (str1 == NULL)
-			{
-				char *rName = tempId;
-				options = SELECTNAME;
-			}
-			else if (strcmp("i", str1) == 0)
-			{
-				int rId = atoi(tempId);
-				options = SELECTID;
-			}
-		}
-		else if (strcmp("insert", str1) == 0)
-		{
-			char *tempId = strtok(NULL, " -");
-			if (tempId == NULL)
-				options = HELPINSERT;
-			else
-			{
-				str1 = strtok(NULL, " -");
-				if (str1 == NULL)
-				{
-					options = HELPINSERT;
-				}
-				else if (strcmp("r", str1) == 0)
-				{
-					strcpy(rName, tempId);
-					options = INSERTRNAME;
-				}
-			}
-		}
-		else if (strcmp("settings", str1) == 0)
-			options = SETTINGS;
-		else if (strcmp("remove", str1) == 0)
-			options = REMOVE;
-		else
-			printf("invlaid input. Defaulting to help\n");
-		options = HELP;
-	}
+		menu(sample_sec, record_time);
 
-	switch (options)
-	{
-	case HELP:
-		helpmenu();
-		break;
-	case HELPCOMPOSE:
-		helpcompose();
-		break;
-	case HELPDISPLAY:
-		helpdisplay();
-		break;
-	case HELPPLAYBACK:
-		helpplayback();
-		break;
-	case HELPRECEIVE:
-		helpreceive();
-		break;
-	case HELPRECORD:
-		helprecord();
-		break;
-	case HELPSELECT:
-		helpselect();
-		break;
-	case HELPINSERT:
-		helpsettings();
-		break;
-	case HELPSETTINGS:
-		helpsettings();
-		break;
-	case HELPREMOVE:
-		helpremove();
-		break;
-	case COMPOSE:
-		composeMsg();
-		break;
-	case DISPLAY:
-		displayMsg();
-		break;
-	case PLAYBACK:
-		playback();
-		break;
-	case RECEIVE:
-		receive();
-		break;
-	case RECORD:
-		record();
-		break;
-	case SELECT:
-		//getphonebook();
-		break;
-	case SELECTNAME:
-		select();
-		break;
-	case SELECTID:
-		select();
-		break;
-	case INSERTRNAME:
-		newuser.mode = 'r';
-		strcpy(newuser.name, rName);
-		NEW(newuser, left, right);
-		InsertR(newuser);
-		break;
-	case SETTINGS:
-		settings();
-		break;
-	case REMOVE:
-		remove();
-		break;
+		option = fgetc(stdin);
+		// Flushing \n character in stdin
+		while (getchar() != '\n');
+
+		system("CLS");
+		
+		switch (option) {
+			case '1':
+				RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
+				CloseRecording();
+				break;
+			case '2':
+				if (!audio_buff) {
+					Errorp("Empty Buffer! Please Record audio before playback\n");
+					break;
+				} else {
+					printf("Playing..\n");
+					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+					ClosePlayback();
+					break;
+				}
+			case '3':
+				tmpHdr = header_init();
+				payload = payload_pack(tmpHdr, audio_buff);
+				payload_unpack(&rcvHdr, &audio_rcv, payload);
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				initPort();
+				printf("sending..%d", _msize(payload));
+				outputToPort(payload, _msize(payload));			// Send audio to port
+				purgePort();									// Purge the port
+				CloseHandle(getCom());							// Closes the handle pointing to the COM port
+				break;
+			case '4':
+				initPort();
+				//get current time for timeout reference
+				printf("Press ESC to return to menu\n");
+				int entered;
+				SYSTEMTIME timeoutWatch;
+				GetSystemTime(&timeoutWatch);
+				while ((rcvStatus = inputFromPort(&rcvPayload)) == 0)					// Receive string from port
+				{
+					
+					SYSTEMTIME currTime;
+					GetSystemTime(&currTime);
+					if (currTime.wMinute > timeoutWatch.wMinute)
+					{
+						if (currTime.wSecond + 60 - WAITTIME > timeoutWatch.wSecond)
+						{
+							printf("\nTimeout(%d)\n", WAITTIME);
+							break;
+						}
+					}
+					else
+					{
+						if (currTime.wSecond - WAITTIME > timeoutWatch.wSecond)
+						{
+							printf("\nTimeout(%d)\n", WAITTIME);
+							break;
+						}
+					}
+				}
+
+				payload_unpack(&rcvHdr, &audio_rcv, rcvPayload);
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				ClosePlayback();
+
+				if (rcvStatus) {
+					tmp = (NODE *)malloc(sizeof(NODE));
+					tmp->data = audio_buff;
+					enqueue(rcvQ, tmp);
+				}
+				purgePort();									// Purge the port
+				CloseHandle(getCom());							// Closes the handle pointing to the COM port
+				break;
+			case '5':
+				getNewParam(&sample_sec, &record_time);
+				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
+				break;
+			case '6':
+				printf("Packaging...\n");
+				tmpHdr = header_init();
+				payload = payload_pack(tmpHdr, audio_buff);
+
+				printf("Unpacking and play...\n");
+				if (payload) {
+					payload_unpack(&rcvHdr, &audio_rcv, payload);
+					printf("Playing..\n");
+					PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+					ClosePlayback();
+				}
+				_sleep(2000);
+				break;
+			default:
+				printf("Please Enter a valid option 1-4!\n");
+				_sleep(2000);
+		}
+
+		system("CLS");
 	}
 	return(0);
 }
