@@ -11,7 +11,6 @@
 #include "queue.h"
 #include "header.h"
 #include "menu.h"
-#include "phonebook.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
@@ -22,9 +21,9 @@ int	main(int argc, char *argv[])
 	char option;
 	short *audio_buff = NULL;
 	short *audio_rcv = NULL;
-	int sample_sec = DEFAULT_SAMPLES_SEC;
-	int record_time = DEFAULT_RECORD_TIME;
-	long audio_buff_sz = sample_sec * record_time;
+	int sample_sec = 0;
+	int record_time = 0;
+	
 	unsigned int rcvStatus = 0;
 	QUEUE *rcvQ;
 	NODE *tmp;
@@ -34,19 +33,14 @@ int	main(int argc, char *argv[])
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
 
-	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
+	
 	char input[MAX];
 	char *str1;
-	char check[MAX];
-	int checker;
+
 	OPTIONS options;
 	//gets_s(input);
-	char *rName;
-	SRUser newuser;
-	link left = NULL;
-	link right = NULL;
-
 	while (1) {
+		printf(">");
 		gets_s(input);
 		for (int i = 0; input[i]; i++) {
 			input[i] = tolower(input[i]);
@@ -85,7 +79,23 @@ int	main(int argc, char *argv[])
 		else if (strcmp("receive", str1) == 0)
 			options = RECEIVE;
 		else if (strcmp("record", str1) == 0)
+		{
 			options = RECORD;
+			char *tempRecTime = strtok(NULL, " -");
+			char *tempRecSampl;
+			if (tempRecTime == NULL)
+			{
+				record_time = DEFAULT_RECORD_TIME;
+				tempRecSampl = strtok(NULL, " -");
+			}
+			else
+				record_time = atoi(tempRecTime);
+
+			if (tempRecSampl == NULL)
+				sample_sec = DEFAULT_SAMPLES_SEC;
+			else
+				sample_sec = atoi(tempRecTime);
+		}
 		else if (strcmp("select", str1) == 0)
 		{
 			char *tempId = strtok(NULL, " -");
@@ -117,7 +127,6 @@ int	main(int argc, char *argv[])
 				}
 				else if (strcmp("r", str1) == 0)
 				{
-					strcpy(rName, tempId);
 					options = INSERTRNAME;
 				}
 			}
@@ -128,77 +137,85 @@ int	main(int argc, char *argv[])
 			options = REMOVE;
 		else
 			printf("invlaid input. Defaulting to help\n");
-		options = HELP;
-	}
 
-	switch (options)
-	{
-	case HELP:
-		helpmenu();
-		break;
-	case HELPCOMPOSE:
-		helpcompose();
-		break;
-	case HELPDISPLAY:
-		helpdisplay();
-		break;
-	case HELPPLAYBACK:
-		helpplayback();
-		break;
-	case HELPRECEIVE:
-		helpreceive();
-		break;
-	case HELPRECORD:
-		helprecord();
-		break;
-	case HELPSELECT:
-		helpselect();
-		break;
-	case HELPINSERT:
-		helpsettings();
-		break;
-	case HELPSETTINGS:
-		helpsettings();
-		break;
-	case HELPREMOVE:
-		helpremove();
-		break;
-	case COMPOSE:
-		composeMsg();
-		break;
-	case DISPLAY:
-		displayMsg();
-		break;
-	case PLAYBACK:
-		playback();
-		break;
-	case RECEIVE:
-		receive();
-		break;
-	case RECORD:
-		record();
-		break;
-	case SELECT:
-		//getphonebook();
-		break;
-	case SELECTNAME:
-		select();
-		break;
-	case SELECTID:
-		select();
-		break;
-	case INSERTRNAME:
-		newuser.mode = 'r';
-		strcpy(newuser.name, rName);
-		NEW(newuser, left, right);
-		InsertR(newuser);
-		break;
-	case SETTINGS:
-		settings();
-		break;
-	case REMOVE:
-		remove();
-		break;
+		long audio_buff_sz = sample_sec * record_time;
+
+		switch (options)
+		{
+		case HELP:
+			helpmenu();
+			break;
+		case HELPCOMPOSE:
+			helpcompose();
+			break;
+		case HELPDISPLAY:
+			helpdisplay();
+			break;
+		case HELPPLAYBACK:
+			helpplayback();
+			break;
+		case HELPRECEIVE:
+			helpreceive();
+			break;
+		case HELPRECORD:
+			helprecord();
+			break;
+		case HELPSELECT:
+			helpselect();
+			break;
+		case HELPINSERT:
+			helpsettings();
+			break;
+		case HELPSETTINGS:
+			helpsettings();
+			break;
+		case HELPREMOVE:
+			helpremove();
+			break;
+		case COMPOSE:
+			composeMsg();
+			break;
+		case DISPLAY:
+			displayMsg();
+			break;
+		case PLAYBACK:
+			if (!audio_buff) {
+				Errorp("Empty Buffer! Please Record audio before playback\n");
+				break;
+			}
+			else {
+				printf("Playing..\n");
+				PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+				ClosePlayback();
+				break;
+			}
+			break;
+		case RECEIVE:
+			receive();
+			break;
+		case RECORD:
+			initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
+			RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
+			CloseRecording();
+			break;
+		case SELECT:
+			//getphonebook();
+			break;
+		case SELECTNAME:
+			select();
+			break;
+		case SELECTID:
+			select();
+			break;
+		case INSERTRNAME:
+			break;
+		case SETTINGS:
+			settings();
+			break;
+		case REMOVE:
+			remove();
+			break;
+		}
 	}
 	return(0);
 }
