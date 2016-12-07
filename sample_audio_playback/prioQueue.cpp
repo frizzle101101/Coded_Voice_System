@@ -150,3 +150,16 @@ PRIONODE *prioDequeue(PRIOQUEUE *usrPQ)
 
 	return tmp;
 }
+
+PRIONODE *contPeek(PRIOQUEUE *usrPQ)
+{
+	static PRIONODE *tmp = NULL;
+
+	if (tmp == NULL) {
+		tmp = usrPQ->head;
+		return tmp;
+	}
+
+	tmp = tmp->nextPrioQ;
+	return tmp;
+}

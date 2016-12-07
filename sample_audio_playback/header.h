@@ -24,13 +24,19 @@ typedef struct {
 #define TEXT_F      (1 << 1)
 #define HUFFMAN_F   (1 << 2)
 #define RLE_F       (1 << 3)
+#define BMP         (1 << 4)
+#define BRAODCAST   (1 << 5)
+
 #define DEFAULT_STATION_ID       0x01
 #define DEFAULT_TARGET_ID       0x01
+#define DEFAULT_TRANSMIT_PRIO   0x00
 #define HEADERSIZE  32
 
 static char stationID = DEFAULT_STATION_ID;
 static char targetID = DEFAULT_TARGET_ID;
+static char transmitPriority = DEFAULT_TRANSMIT_PRIO;
 
-HEADER *header_init(char *prio);
+HEADER *header_init(char *prio, char *inputStationID);
 void *payload_pack(HEADER *usrHeader, void *contentBuf);
 int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload);
+void print_header(HEADER *usrHeader);

@@ -51,16 +51,37 @@ void getNewParam(int *sample_sec, int *record_time)
 	} while ((*record_time <= 0) && (*record_time > 64));
 }
 
-void setPriority(char * prio)
+void setPriority(char **prio)
 {
 	char tmp[MAX_TMP_BUFF];
 	char *ptr;
+
+	if (!*prio) {
+		*prio = (char *)malloc(sizeof(char));
+	}
 	do {
 		printf("Please enter transmit priority from 0 - 255 (0 - highest priorty)\n");
 		fgets(tmp, MAX_TMP_BUFF, stdin);
-		*prio = (int)strtol(tmp, &ptr, 10);
+		**prio = (int)strtol(tmp, &ptr, 10);
 		system("CLS");
-	} while ((*prio <= 0) && (*prio > 255));
+	} while ((**prio <= 0) && (**prio > 255));
+}
+
+void setStationID(char **stationID)
+{
+	char tmp[MAX_TMP_BUFF];
+	char *ptr;
+
+	if (!*stationID) {
+		*stationID = (char *)malloc(sizeof(char));
+	}
+
+	do {
+		printf("Please enter stationID from 0 - 255\n");
+		fgets(tmp, MAX_TMP_BUFF, stdin);
+		**stationID = (int)strtol(tmp, &ptr, 10);
+		system("CLS");
+	} while ((**stationID <= 0) && (**stationID > 255));
 }
 
 void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)

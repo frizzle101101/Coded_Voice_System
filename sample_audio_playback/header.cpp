@@ -42,14 +42,6 @@ static int header_check(HEADER *usrHeader)
 		return rc;
 	}
 
-	printf("Station Sender ID %04x\n", usrHeader->senderID);
-	printf("Header Size:%d bytes\n", _msize(usrHeader));
-	printf("lSignature: %04x\n", usrHeader->lSignature);
-	printf("bVersion: %d\n", usrHeader->bVersion);
-	printf("bPattern: %04x\n", usrHeader->bPattern);
-	printf("ldatalength: %d\n", usrHeader->lDataLength);
-	printf("cldatalength: %d\n", usrHeader->clDataLength);
-
 	return rc;
 }
 
@@ -103,7 +95,7 @@ int setTargetID(char *inputID)
 	return rc;
 }
 
-HEADER *header_init(char *prio)
+HEADER *header_init(char *prio, char *inputStationID)
 {
 	int rc;
 	HEADER *tmp;
@@ -118,8 +110,18 @@ HEADER *header_init(char *prio)
 	tmp->flags = 0;
 	tmp->flags |= AUDIO_F;
 	tmp->flags |= HUFFMAN_F;
+
+	if (inputStationID) {
+		stationID = *inputStationID;
+	}
+
 	populateIDs(tmp);
-	tmp->priority = *prio;
+
+	if (prio) {
+		transmitPriority = *prio;
+	}
+
+	tmp->priority = transmitPriority;
 	return tmp;
 }
 
@@ -222,4 +224,22 @@ int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
 	}
 	
 	return 0;
+}
+
+void print_header(HEADER *usrHeader)
+{
+	if (usrHeader) {
+		printf("Header Size:%d bytes\n", _msize(usrHeader));
+		printf("lSignature: %04x\n", usrHeader->lSignature);
+		printf("Receiver ID %02x\n", usrHeader->rcverID);
+		printf("Sender ID %02x\n", usrHeader->senderID);
+		printf("Priority %02x\n", usrHeader->priority);
+		printf("Receiver ID Repeat 1 %02x\n", usrHeader->rcverID_rp1);
+		printf("ldatalength: %d\n", usrHeader->lDataLength);
+		printf("cldatalength: %d\n", usrHeader->clDataLength);
+		printf("bVersion: %d\n", usrHeader->bVersion);
+		printf("Receiver ID Repeat 2 %02x\n", usrHeader->rcverID_rp2);
+		printf("Receiver ID Repeat 3 %02x\n", usrHeader->rcverID_rp3);
+		printf("bPattern: %04x\n", usrHeader->bPattern);
+	}
 }

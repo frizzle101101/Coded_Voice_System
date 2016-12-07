@@ -142,6 +142,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bst.cpp" />
     <ClCompile Include="compression.cpp" />
     <ClCompile Include="console.cpp" />
     <ClCompile Include="demo.cpp" />
@@ -156,6 +157,7 @@
     <ClCompile Include="RS232.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bst.h" />
     <ClInclude Include="compression.h" />
     <ClInclude Include="console.h" />
     <ClInclude Include="demo.h" />
