@@ -2,12 +2,12 @@
 
 typedef struct {
 	long lSignature;
+	long clDataLength;
 	char rcverID;
 	char senderID;
 	char priority;
 	char rcverID_rp1;
 	long lDataLength;
-	long clDataLength;
 	char rcverID_rp2;
 	char bVersion;
 	short sampleSec;
