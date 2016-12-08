@@ -27,6 +27,7 @@ QUEUE *queue_init(void)
 	}
 	tmp->head = NULL;
 	tmp->tail = NULL;
+	tmp->count = 0;
 
 	return tmp;
 }
@@ -58,6 +59,8 @@ int enqueue(QUEUE *userQ, NODE *userNode)
 		userQ->tail->next = userNode;
 		userQ->tail = userNode;
 	}
+
+	userQ->count++;
 
 	return rc;
 }
@@ -96,6 +99,8 @@ NODE *dequeue(QUEUE *userQ)
 	} else {
 		userQ->head = userQ->head->next;
 	}
+
+	userQ->count--;
 
 	return tmp;
 }

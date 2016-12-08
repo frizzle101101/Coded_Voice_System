@@ -2,11 +2,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <conio.h>
-#include "demo.h"
+#include "utilities.h"
 
 #define MAX_RECORD_SEC 64
 #define MAX_TMP_BUFF 8
-void menu(int sample_sec, int record_time) 
+void menu(int sample_sec, int record_time, int qCount) 
 {
 	printf("Welcome to Audio Playback Demo!\n");
 	printf("Please enter the follow option:\n");
@@ -18,6 +18,7 @@ void menu(int sample_sec, int record_time)
 	printf("7 - Packaging Diagnostic\n");
 	printf("8 - Exit\n");
 	printf("\n\nParameters: sample second = %d, record second = %d\n", sample_sec, record_time);
+	printf("Number of message in Queue %d\n", qCount);
 }
 
 void cp_menu() 
@@ -82,6 +83,24 @@ void setStationID(char **stationID)
 		**stationID = (int)strtol(tmp, &ptr, 10);
 		system("CLS");
 	} while ((**stationID <= 0) && (**stationID > 255));
+}
+
+
+void setTargetID(char **targetID)
+{
+	char tmp[MAX_TMP_BUFF];
+	char *ptr;
+
+	if (!*targetID) {
+		*targetID = (char *)malloc(sizeof(char));
+	}
+
+	do {
+		printf("Please enter targetID from 0 - 255\n");
+		fgets(tmp, MAX_TMP_BUFF, stdin);
+		**targetID = (int)strtol(tmp, &ptr, 10);
+		system("CLS");
+	} while ((**targetID <= 0) && (**targetID > 255));
 }
 
 void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)

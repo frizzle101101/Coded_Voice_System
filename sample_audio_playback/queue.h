@@ -9,6 +9,7 @@ typedef struct node {
 typedef struct {
 	NODE *head;
 	NODE *tail;
+	int count;
 }QUEUE;
 
 QUEUE *queue_init(void);

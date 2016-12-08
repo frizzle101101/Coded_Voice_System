@@ -18,14 +18,24 @@ typedef struct {
 	char bPattern[4];
 } HEADER;
 
+typedef enum {
+	AUDIO_T,
+	TEXT_T,
+	BMP_T
+}FILETYPE;
+
+typedef enum {
+	FALSE_B,
+	TRUE_B
+} BOOLYN;
+
 #define DEADBEEF 0xDEADBEEF
 #define PATTERN  "\x55\xaa\x55\xaa"
-#define AUDIO_F     (1 << 0)
-#define TEXT_F      (1 << 1)
-#define HUFFMAN_F   (1 << 2)
-#define RLE_F       (1 << 3)
-#define BMP         (1 << 4)
-#define BRAODCAST   (1 << 5)
+#define AUDIO_F       (1 << 0)
+#define TEXT_F        (1 << 1)
+#define HUFFMAN_F     (1 << 2)
+#define BMP_F         (1 << 3)
+#define BRAODCAST_F   (1 << 4)
 
 #define DEFAULT_STATION_ID       0x01
 #define DEFAULT_TARGET_ID       0x01
@@ -36,7 +46,10 @@ static char stationID = DEFAULT_STATION_ID;
 static char targetID = DEFAULT_TARGET_ID;
 static char transmitPriority = DEFAULT_TRANSMIT_PRIO;
 
-HEADER *header_init(char *prio, char *inputStationID);
+HEADER *header_init(char *prio, FILETYPE usrFileType, long sizeBuf,
+	short sampleSec, short recordSec, BOOLYN isCompressed);
 void *payload_pack(HEADER *usrHeader, void *contentBuf);
 int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload);
 void print_header(HEADER *usrHeader);
+int setGlobalStationID(char *inputID);
+int setGlobalTargetID(char *inputID);
