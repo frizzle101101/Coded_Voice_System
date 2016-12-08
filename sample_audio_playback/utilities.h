@@ -7,5 +7,8 @@ typedef enum {
 
 void initializeBuffers(int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type);
 void getNewParam(int *sample_sec, int *record_time);
-void menu(int sample_sec, int record_time);
+void setPriority(char **prio);
+void setStationID(char **stationID);
+void setTargetID(char **targetID);
+void menu(int sample_sec, int record_time, int qCount);
 void cp_menu();

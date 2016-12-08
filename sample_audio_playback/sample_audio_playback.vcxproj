@@ -142,29 +142,35 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="bst.cpp" />
     <ClCompile Include="compression.cpp" />
     <ClCompile Include="console.cpp" />
-    <ClCompile Include="demo.cpp" />
+    <ClCompile Include="hash.cpp" />
     <ClCompile Include="header.cpp" />
     <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="menu.cpp" />
     <ClCompile Include="playback.cpp" />
+    <ClCompile Include="prioQueue.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="record.cpp" />
     <ClCompile Include="RS232.cpp" />
+    <ClCompile Include="utilities.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="bst.h" />
     <ClInclude Include="compression.h" />
     <ClInclude Include="console.h" />
-    <ClInclude Include="demo.h" />
+    <ClInclude Include="hash.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="huffman.h" />
     <ClInclude Include="menu.h" />
     <ClInclude Include="playback.h" />
+    <ClInclude Include="prioQueue.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />
     <ClInclude Include="RS232.h" />
+    <ClInclude Include="utilities.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

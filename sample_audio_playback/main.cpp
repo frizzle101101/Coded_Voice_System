@@ -6,7 +6,7 @@
 #include "record.h"
 #include "playback.h"
 #include "console.h"
-#include "demo.h"
+#include "utilities.h"
 #include "RS232.h"
 #include "queue.h"
 #include "header.h"
