@@ -18,7 +18,6 @@ unsigned char *huffman_cmp_wrapper(void *content, long *cmprsed_size)
 		*cmprsed_size = *c_sized;
 
 	compressed = (unsigned char *)realloc(compressed, *c_sized);
-	printf("cmprsed_size:%d, msize compressed: %d\n", *cmprsed_size, _msize(compressed));
 	return compressed;
 }
 

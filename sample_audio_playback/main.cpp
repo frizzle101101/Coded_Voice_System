@@ -50,6 +50,8 @@ int	main(int argc, char *argv[])
 	FILETYPE usrFileType;
 	BOOLYN isCompressed = DEFAULT_COMPRESSION_OPTION;
 	void *rcvBuf;
+	int *commPort = NULL;
+	int *baudrate = NULL;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
@@ -101,51 +103,52 @@ int	main(int argc, char *argv[])
 			case '4':
 				initPort();
 
-				inputFromPort(&rcvPayload);
+				if (inputFromPort(&rcvPayload) != -1) {
 
-				if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
-					printf("DETECT ERRONEOUS MESSAGE\n");
-					printf("Press any key to continue..\n");
-					fgetc(stdin);
-					while (getchar() != '\n');
-					purgePort();									
-					CloseHandle(getCom());							
-					break;
+					if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
+						printf("DETECT ERRONEOUS MESSAGE\n");
+						printf("Press any key to continue..\n");
+						fgetc(stdin);
+						while (getchar() != '\n');
+						purgePort();
+						CloseHandle(getCom());
+						break;
+					}
+
+					if (rcvHdr->flags & AUDIO_F) {
+						PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
+						ClosePlayback();
+					}
+
+					if (rcvHdr->flags & BMP_F) {
+						FILE *fp;
+
+						fp = fopen("receiveBMP.bmp", "wb");
+						fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
+						fclose(fp);
+
+						DrawBMP("receiveBMP.bmp", 0, 400);
+					}
+
+					rcvNode = (NODE *)malloc(sizeof(NODE));
+					rcvNode->data = rcvPayload;
+					enqueue(rcvQ, rcvNode);
+
+					prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
+
+					tmpBstNode = bst_node_init();
+					tmpBstNode->data = rcvHdr->senderID;
+					bst_insert(&phoneBook->root, tmpBstNode);
+
+					purgePort();
+					CloseHandle(getCom());
 				}
-
-				if (rcvHdr->flags & AUDIO_F) {
-					PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
-					ClosePlayback();
-				}
-
-				if (rcvHdr->flags & BMP_F) {
-					FILE *fp;
-
-					fp = fopen("receiveBMP.bmp", "wb");
-					fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
-					fclose(fp);
-
-					DrawBMP("receiveBMP.bmp", 0, 400);
-				}
-
-				rcvNode = (NODE *)malloc(sizeof(NODE));
-				rcvNode->data = rcvPayload;
-				enqueue(rcvQ, rcvNode);
-
-				prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
-
-				tmpBstNode = bst_node_init();
-				tmpBstNode->data = rcvHdr->senderID;
-				bst_insert(&phoneBook->root, tmpBstNode);
-
-				purgePort();
-				CloseHandle(getCom());
-
 				printf("Press any key to continue..\n");
 				fgetc(stdin);
 				while (getchar() != '\n');
 				break;
 			case '5':
+				/*
 				if (setCompression() == 'n')
 					isCompressed = FALSE_B;
 				setGlobalCompression(&isCompressed);
@@ -157,6 +160,11 @@ int	main(int argc, char *argv[])
 				setGlobalStationID(stationID);
 				setTargetID(&targetID);
 				setGlobalTargetID(targetID);
+				*/
+				setCommPort(&commPort);
+				setGlobalCommPort(*commPort);
+				setBaudrate(&baudrate);
+				setGlobalBaudRate(baudrate);
 				break;
 			case '6':
 				/* Audio Packaging Diagnostic */
@@ -247,7 +255,7 @@ int	main(int argc, char *argv[])
 				break;
 			case 'b':
 				/* BMP File Diagnostic*/
-				fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+				fp = fopen("sample.bmp", "rb");
 
 				if (!fp)
 					printf("Failed to open bmp file\n");
@@ -273,7 +281,7 @@ int	main(int argc, char *argv[])
 				break;
 			case 'c':
 				/* Sending BMP*/
-				fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+				fp = fopen("sample.bmp", "rb");
 
 				if (!fp)
 					printf("Failed to open bmp file\n");

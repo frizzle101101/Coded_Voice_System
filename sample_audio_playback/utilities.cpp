@@ -116,6 +116,40 @@ char setCompression(void)
 	return tmp;
 }
 
+void setBaudrate(int **baudrate)
+{
+	char tmp[MAX_TMP_BUFF];
+	char *ptr;
+
+	if (!*baudrate) {
+		*baudrate = (int *)malloc(sizeof(int));
+	}
+	do {
+		printf("Please enter Baudrate (Use standard baudrate)\n");
+		fgets(tmp, MAX_TMP_BUFF, stdin);
+		**baudrate = (int)strtol(tmp, &ptr, 10);
+		system("CLS");
+	} while ((**baudrate != 300) && (**baudrate != 600) && (**baudrate != 1200) && (**baudrate != 2400) && (**baudrate != 4800) 
+		     && (**baudrate != 9600) && (**baudrate != 19200) && (**baudrate != 19200) && (**baudrate != 38400)
+		     && (**baudrate != 57600) && (**baudrate != 115200));
+}
+
+void setCommPort(int **commPort)
+{
+	char tmp[MAX_TMP_BUFF];
+	char *ptr;
+
+	if (!*commPort) {
+		*commPort = (int *)malloc(sizeof(int));
+	}
+	do {
+		printf("Please enter CommPort (10/11/13)\n");
+		fgets(tmp, MAX_TMP_BUFF, stdin);
+		**commPort = (int)strtol(tmp, &ptr, 10);
+		system("CLS");
+	} while ((**commPort != 11) && (**commPort != 10) && (**commPort != 13));
+}
+
 void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)
 {
 	(*audio_buff_sz) = sample_sec * record_time;
