@@ -57,6 +57,9 @@
     <ClCompile Include="rle.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="mainbackup.cpp">
+      <Filter>Resource Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h">
