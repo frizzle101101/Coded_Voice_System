@@ -410,6 +410,7 @@ int	main(int argc, char *argv[])
 		case SETTINGS:
 			printGlobalSetting();
 			printGlobalRS232Param();
+			printf("Queue count %d", rcvQ->count);
 			break;
 		case SETCMPRS:
 			setGlobalCompression(&isCompressed);

@@ -78,7 +78,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 	char serial[MAX_STACK_SIZE];
 	LPVOID payload;
 	int flag = 0;
-	unsigned long resultTime = 0;
+	long resultTime = 0;
 	struct timeb start, end;
 
 	if (!SetCommMask(hCom, EV_RXCHAR))
@@ -120,7 +120,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 
 		printf("\nTotal bytes received!: %d\n", i);
 		
-		printf("\nTotal Transmission Time: %lu\n", resultTime);
+		printf("\nTotal Transmission Time: %.3f\n", (resultTime/1000.0));
 
 		payload = malloc(sizeof(char) * i);
 		memcpy(payload, serial, i);
