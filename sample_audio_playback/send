@@ -1,0 +1,12 @@
+COMMAND
+    send
+
+SYNOPSIS
+    send [OPTIONS]
+
+DESCRIPTION
+Send data out through RS-232 using global settings.
+
+OPTIONS
+-a              Send audio.
+-b              Send sample bmp file.

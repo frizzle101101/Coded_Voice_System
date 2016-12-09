@@ -1,11 +1,13 @@
-NAME
+COMMAND
     record
+
 SYNOPSIS
-    record
+    record 
 
 DESCRIPTION
-Record audio file through recording device.
+Record audio file through recording device. Store in audio buffer in program
 
-Command has no option. Command will fail if no playback
-device is not detected. Consult device manager for proper
-playback device connection
+OPTIONS
+Command has no options. Command will fail if no recording
+device is detected. Consult device manager for proper
+recording device connection

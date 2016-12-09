@@ -1,9 +1,11 @@
 For more information on a specific command, type help command-name
 
-playbackall     Play all the contents in queue, priority queue and phone.
+help            Call help for a command
+playback        Play the recorded audio file.
 receive         Waiting for a RS-232 comm port message. (A blocking call).
 record          Record an audio file.
-playback        Play the recorded audio file.
+select          Sets/Selects the reciever or sender Id
 send            Send data through RS-232 depends on input option.
-settings        Set various parameters based on input option.
-helptest        Run various diagnostic functions based on input option.
+set             Set various parameters based on input option.
+settings        Display current global settings.
+test            Run diagnostic functions. 
