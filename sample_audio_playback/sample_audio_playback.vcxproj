@@ -150,6 +150,7 @@
     <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainbackup.cpp" />
+    <ClCompile Include="menu.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="prioQueue.cpp" />
     <ClCompile Include="queue.cpp" />
@@ -165,6 +166,7 @@
     <ClInclude Include="hash.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="huffman.h" />
+    <ClInclude Include="menu.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="prioQueue.h" />
     <ClInclude Include="queue.h" />
@@ -172,6 +174,14 @@
     <ClInclude Include="rle.h" />
     <ClInclude Include="RS232.h" />
     <ClInclude Include="utilities.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help" />
+    <None Include="playback" />
+    <None Include="playback all" />
+    <None Include="record" />
+    <None Include="send" />
+    <None Include="test" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

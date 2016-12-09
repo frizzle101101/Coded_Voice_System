@@ -172,3 +172,20 @@ void initializeBuffers (int sample_sec, int record_time, short **audio_buff, lon
 	else 
 		*audio_buff = (short *)realloc(*audio_buff, sizeof(short) * (*audio_buff_sz));
 }
+
+void displayHelp(char *fileName)
+{
+	FILE *fp;
+	int c;
+
+	fp = fopen(fileName, "r");
+	while (1)
+	{
+		c = fgetc(fp);
+		if (feof(fp))
+			break;
+		printf("%c", c);
+	}
+	printf("\n");
+	fclose(fp);
+}

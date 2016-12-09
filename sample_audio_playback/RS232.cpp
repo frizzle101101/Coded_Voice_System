@@ -191,3 +191,9 @@ void setGlobalCommPort(int inputComm)
 			printf("Invalid Comm port\n");
 	}
 }
+
+void printGlobalRS232Param(void)
+{
+	printf("BaudRate %d\n", baudrate);
+	printf("Comm port: %s\n", port);
+}

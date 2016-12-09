@@ -1,0 +1,11 @@
+NAME
+    record
+SYNOPSIS
+    record
+
+DESCRIPTION
+Record audio file through recording device.
+
+Command has no option. Command will fail if no playback
+device is not detected. Consult device manager for proper
+playback device connection

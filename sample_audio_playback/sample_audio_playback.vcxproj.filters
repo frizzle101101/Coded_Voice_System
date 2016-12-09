@@ -60,6 +60,9 @@
     <ClCompile Include="mainbackup.cpp">
       <Filter>Resource Files</Filter>
     </ClCompile>
+    <ClCompile Include="menu.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="console.h">
@@ -101,5 +104,28 @@
     <ClInclude Include="rle.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="help">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="playback">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="playback all">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="record">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="send">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="test">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
