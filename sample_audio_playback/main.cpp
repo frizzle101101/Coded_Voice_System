@@ -67,6 +67,7 @@ int	main(int argc, char *argv[])
 	char input[MAX];
 	char *str1 = NULL;
 	char helpstat[MAX];
+	char *usrText;
 
 	OPTIONS options;
 	//gets_s(input);
@@ -252,7 +253,13 @@ int	main(int argc, char *argv[])
 			displayHelp(helpstat);
 			break;
 		case COMPOSE:
-			composeMsg();
+			usrText = composeMsg();
+			break;
+		case DISPLAY:
+			if (usrText)
+				printf("%s\n", usrText);
+			else
+				printf("No text entered! Use command (compose) to enter message.\n");
 			break;
 		case PLAYBACK:
 			if (!audio_buff) {
@@ -323,6 +330,10 @@ int	main(int argc, char *argv[])
 						fclose(fp);
 
 						DrawBMP("receiveBMP.bmp", 0, 400);
+					}
+
+					if (rcvHdr->flags & TEXT_F) {
+						printf("Received Text:\n%s", rcvBuf);
 					}
 
 					rcvNode = (NODE *)malloc(sizeof(NODE));
@@ -408,6 +419,21 @@ int	main(int argc, char *argv[])
 			printf("Press any key to continue..\n");
 			fgetc(stdin);
 			while (getchar() != '\n');
+			break;
+		case SENDTEXT:
+			if (usrText) {
+				usrFileType = TEXT_T;
+				tmpHdr = header_init(usrFileType, _msize(usrText),
+					sample_sec, record_time, isCompressed);
+				payload = payload_pack(tmpHdr, usrText);
+				initPort();
+				printf("sending %d bytes...\n", _msize(payload));
+				outputToPort(payload, _msize(payload));
+				purgePort();
+				CloseHandle(getCom());
+			} else {
+				printf("No text entered! Use command (compose) to enter message.\n");
+			}
 			break;
 		case SETTINGS:
 			printGlobalSetting();

@@ -11,7 +11,6 @@ void helprecord(void);
 void helpselect(void);
 void helpsettings(void);
 void helpremove(void);
-void composeMsg(void);
 void displayMsg(void);
 void playback(void);
 void receive(void);
