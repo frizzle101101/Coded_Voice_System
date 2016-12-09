@@ -10,30 +10,55 @@
 #include "RS232.h"
 #include "queue.h"
 #include "header.h"
+#include "prioQueue.h"
+#include "bst.h"
 #include "menu.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
 #define WAITTIME 40
+#define DEFAULT_COMPRESSION_OPTION TRUE_B
+
 
 int	main(int argc, char *argv[])
 {
 	char option;
+	char *transmitPrio = NULL;
 	short *audio_buff = NULL;
 	short *audio_rcv = NULL;
-	int sample_sec = 0;
-	int record_time = 0;
-	
-	unsigned int rcvStatus = 0;
+	int sample_sec = DEFAULT_SAMPLES_SEC;
+	int record_time = DEFAULT_RECORD_TIME;
+	char *stationID = NULL;
+	char *targetID = NULL;
+	char *msgPriority = NULL;
+	long audio_buff_sz = sample_sec * record_time;
 	QUEUE *rcvQ;
 	NODE *tmp;
+	NODE *rcvNode;
+	PRIONODE *tmpPQ;
 	HEADER *tmpHdr, *rcvHdr;
 	void *payload, *rcvPayload;
+	FILE *fpw;
+	char *audioFile[] = { "prio1-1", "prio4-1", "prio5-1", "prio2-1", "prio3-1", "prio1-2" };
+	char prio[6] = { 1, 4, 5, 2, 3, 1 };
+	short *tmp_audio_buff;
+	unsigned char stations[11] = { 0x00, 0x03, 0x00, 0x04, 0x05, 0x06, 0x07, 0x00, 0x10, 0x13, 0x13 };
+	BSTNODE *tmpBstNode;
+	BST *phoneBook;
+	PRIOQUEUE *rcvPQ;
+	FILE *fp;
+	int bmpSize;
+	char *bmpRaw;
+	FILETYPE usrFileType;
+	BOOLYN isCompressed = DEFAULT_COMPRESSION_OPTION;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
+	rcvPQ = prioQueue_init();
+	phoneBook = bst_init();
 
-	
+	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
+
 	char input[MAX];
 	char *str1;
 
@@ -100,39 +125,56 @@ int	main(int argc, char *argv[])
 		{
 			char *tempId = strtok(NULL, " -");
 			if (tempId == NULL)
-				options = SELECT;
-			str1 = strtok(NULL, " -");
-			if (str1 == NULL)
-			{
-				char *rName = tempId;
-				options = SELECTNAME;
-			}
-			else if (strcmp("i", str1) == 0)
-			{
-				int rId = atoi(tempId);
-				options = SELECTID;
-			}
-		}
-		else if (strcmp("insert", str1) == 0)
-		{
-			char *tempId = strtok(NULL, " -");
-			if (tempId == NULL)
-				options = HELPINSERT;
+				options = HELPSELECT;
+			else if (strcmp("r", tempId) == 0)
+				options = SELECTR;
+			else if (strcmp("s", tempId) == 0)
+				options = SELECTS;
 			else
 			{
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
-				{
-					options = HELPINSERT;
-				}
+					options = HELPSELECT;
 				else if (strcmp("r", str1) == 0)
 				{
-					options = INSERTRNAME;
+					targetID = tempId;
+					options = SELECTRID;
+				}
+				else if (strcmp("s", str1) == 0)
+				{
+					stationID = tempId;
+					options = SELECTSID;
 				}
 			}
 		}
+		else if (strcmp("send", str1) == 0)
+		{
+			str1 = strtok(NULL, " -");
+			if (str1 == NULL)
+				options = HELPSEND;
+			else if (strcmp("a", str1) == 0)
+				options = SENDAUDIO;
+			else if (strcmp("b", str1) == 0)
+				options = SENDBMP;
+		}
 		else if (strcmp("settings", str1) == 0)
 			options = SETTINGS;
+		else if (strcmp("test", str1) == 0)
+		{
+			str1 = strtok(NULL, " -");
+			if (str1 == NULL)
+				options = HELPTEST;
+			else if (strcmp("a", str1) == 0)
+				options = TESTAUDIO;
+			else if (strcmp("pq", str1) == 0)
+				options = TESTPRIQU;
+			else if (strcmp("pb", str1) == 0)
+				options = TESTPHONEBOOK;
+			else if (strcmp("h", str1) == 0)
+				options = TESTHEADER;
+			else if (strcmp("b", str1) == 0)
+				options = TESTBMP;
+		}
 		else if (strcmp("remove", str1) == 0)
 			options = REMOVE;
 		else
@@ -176,7 +218,20 @@ int	main(int argc, char *argv[])
 			composeMsg();
 			break;
 		case DISPLAY:
-			displayMsg();
+			/* Display Queue, Priority Queue and Phonebook*/
+			printf("Dequeueing Normal Queue\n");
+			while ((tmp = dequeue(rcvQ)) != NULL)
+				PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+
+			printf("Dequeueing Priority Queue\n");
+			while ((tmpPQ = prioDequeue(rcvPQ)) != NULL) {
+				while ((tmp = dequeue(tmpPQ->queue)) != NULL) {
+					PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+				}
+			}
+
+			printf("Printing Phonebook\n");
+			bst_inorder_traversal(phoneBook->root);
 			break;
 		case PLAYBACK:
 			if (!audio_buff) {
@@ -190,27 +245,191 @@ int	main(int argc, char *argv[])
 				break;
 			}
 			break;
+		case PRIORITY:
+			setPriority(&transmitPrio);
+			break;
 		case RECEIVE:
-			receive();
+			initPort();
+
+			inputFromPort(&rcvPayload);
+
+			if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
+				printf("DETECT ERRONEOUS MESSAGE\n");
+				printf("Press any key to continue..\n");
+				fgetc(stdin);
+				while (getchar() != '\n');
+				purgePort();
+				CloseHandle(getCom());
+				break;
+			}
+
+			if (rcvHdr->flags & AUDIO_F) {
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				ClosePlayback();
+
+				rcvNode = (NODE *)malloc(sizeof(NODE));
+				rcvNode->data = audio_rcv;
+				enqueue(rcvQ, rcvNode);
+
+				prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
+
+				tmpBstNode = bst_node_init();
+				tmpBstNode->data = rcvHdr->senderID;
+				bst_insert(&phoneBook->root, tmpBstNode);
+			}
+
+			purgePort();
+			CloseHandle(getCom());
 			break;
 		case RECORD:
 			initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
 			RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
 			CloseRecording();
 			break;
-		case SELECT:
-			//getphonebook();
+		case SELECTR:
+			setTargetID(&targetID);
+			setGlobalTargetID(targetID);
 			break;
-		case SELECTNAME:
-			select();
+		case SELECTS:
+			setStationID(&stationID);
+			setGlobalStationID(stationID);
 			break;
-		case SELECTID:
-			select();
+		case SELECTRID:
+			setGlobalTargetID(targetID);
 			break;
-		case INSERTRNAME:
+		case SELECTSID:
+			setGlobalStationID(stationID);
+			break;
+		case SENDAUDIO:
+			usrFileType = AUDIO_T;
+			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff),
+				sample_sec, record_time, isCompressed);
+			payload = payload_pack(tmpHdr, audio_buff);
+			//payload_unpack(&rcvHdr, &audio_rcv, payload);
+			//PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+			initPort();
+			printf("sending..%d", _msize(payload));
+			outputToPort(payload, _msize(payload));			// Send audio to port
+			purgePort();									// Purge the port
+			CloseHandle(getCom());							// Closes the handle pointing to the COM port
+			break;
+		case SENDBMP:
+			fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+
+			if (!fp)
+				printf("Failed to open bmp file\n");
+
+			fseek(fp, 0, SEEK_END);
+			bmpSize = ftell(fp);
+			rewind(fp);
+
+			bmpRaw = (char *)malloc(sizeof(char) *bmpSize);
+
+			fread(bmpRaw, sizeof(char), bmpSize, fp);
+
+			usrFileType = BMP_T;
+			tmpHdr = header_init(transmitPrio, usrFileType, _msize(bmpRaw),
+				sample_sec, record_time, isCompressed);
+
+			payload = payload_pack(tmpHdr, bmpRaw);
+
+			initPort();
+			printf("sending..%d", _msize(payload));
+			outputToPort(payload, _msize(payload));			// Send audio to port
+			purgePort();									// Purge the port
+			CloseHandle(getCom());							// Closes the handle pointing to the COM port
+
 			break;
 		case SETTINGS:
 			settings();
+			break;
+		case TESTAUDIO:
+			/* Audio Packaging Diagnostic */
+			printf("Packaging...\n");
+			usrFileType = AUDIO_T;
+			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+			payload = payload_pack(tmpHdr, audio_buff);
+
+			printf("Unpacking and play...\n");
+			if (payload) {
+				payload_unpack(&rcvHdr, &audio_rcv, payload);
+				printf("Playing..\n");
+				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+				ClosePlayback();
+			}
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
+			break;
+		case TESTPRIQU:
+			/* Priority Queue Diagnostic*/
+			for (int i = 0; i < 6; i++) {
+				printf("%d insert ", i);
+				printf("0x%02x\n", prio[i]);
+				fpw = fopen(audioFile[i], "rb");
+				tmp_audio_buff = (short *)malloc(sizeof(short) *audio_buff_sz);
+				fread(tmp_audio_buff, sizeof(short), audio_buff_sz, fpw);
+				tmp = (NODE *)malloc(sizeof(NODE));
+				printf("main %p\n", tmp);
+				tmp->data = tmp_audio_buff;
+				printf("audio pointer %p\n", tmp->data);
+				PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+				prioEnqueue(rcvPQ, tmp, prio[i]);
+				fclose(fpw);
+			}
+			printPrioQueue(rcvPQ);
+
+			while ((tmpPQ = prioDequeue(rcvPQ)) != NULL) {
+				while ((tmp = dequeue(tmpPQ->queue)) != NULL) {
+					printf("Deqing %p %p %p\n", tmpPQ->queue, tmp, tmp->data);
+					PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+				}
+			}
+			break;
+		case TESTPHONEBOOK:
+			/* Phonebook Diagnostic */
+			for (int i = 0; i < 11; i++) {
+				tmpBstNode = bst_node_init();
+				tmpBstNode->data = stations[i];
+				bst_insert(&phoneBook->root, tmpBstNode);
+			}
+			bst_inorder_traversal(phoneBook->root);
+			break;
+		case TESTHEADER:
+			/* Header Diagnostic */
+			usrFileType = AUDIO_T;
+			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+			print_header(tmpHdr);
+
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
+			break;
+		case TESTBMP:
+			/* BMP File Diagnostic*/
+			fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+
+			if (!fp)
+				printf("Failed to open bmp file\n");
+
+			fseek(fp, 0, SEEK_END);
+			bmpSize = ftell(fp);
+			rewind(fp);
+
+			printf("%d", bmpSize);
+
+			bmpRaw = (char *)malloc(sizeof(char) *bmpSize);
+
+			fread(bmpRaw, sizeof(char), bmpSize, fp);
+			fclose(fp);
+
+			fp = fopen("raw.bmp", "wb");
+			fwrite(bmpRaw, sizeof(char), bmpSize, fp);
+			fclose(fp);
+
+			DrawBMP("raw.bmp", 0, 400);
+
+			free(bmpRaw);
 			break;
 		case REMOVE:
 			remove();
