@@ -14,4 +14,4 @@ HANDLE getCom(void);
 void setGlobalCommPort(int inputComm);
 void setGlobalBaudRate(int *inputBaud);
 void printGlobalRS232Param(void);
-static long get_nanos(void);
+static unsigned long get_nanos(void);

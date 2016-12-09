@@ -141,6 +141,7 @@ int	RecordBuffer(short *piBuf, long lBufSize, int sample_sec)
 	// probably not necessary
 	waveInStop(HWaveIn);
 
+	printf("\n");
 	return(rc);
 }
 
