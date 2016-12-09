@@ -186,5 +186,6 @@ void displayHelp(char *fileName)
 			break;
 		printf("%c", c);
 	}
+	printf("\n");
 	fclose(fp);
 }
