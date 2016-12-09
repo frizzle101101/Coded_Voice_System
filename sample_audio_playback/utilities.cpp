@@ -116,6 +116,19 @@ char setCompression(void)
 	return tmp;
 }
 
+char setHashCheck(void)
+{
+	char tmp;
+	do {
+		printf("Set Hash Check (y/n)\n");
+		tmp = fgetc(stdin);
+		system("CLS");
+	} while ((tmp != 'y') && (tmp != 'n'));
+
+	while (getchar() != '\n');
+	return tmp;
+}
+
 void setBaudrate(int **baudrate)
 {
 	char tmp[MAX_TMP_BUFF];

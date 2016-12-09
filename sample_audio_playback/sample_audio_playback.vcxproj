@@ -154,6 +154,7 @@
     <ClCompile Include="prioQueue.cpp" />
     <ClCompile Include="queue.cpp" />
     <ClCompile Include="record.cpp" />
+    <ClCompile Include="rle.cpp" />
     <ClCompile Include="RS232.cpp" />
     <ClCompile Include="utilities.cpp" />
   </ItemGroup>
@@ -169,6 +170,7 @@
     <ClInclude Include="prioQueue.h" />
     <ClInclude Include="queue.h" />
     <ClInclude Include="record.h" />
+    <ClInclude Include="rle.h" />
     <ClInclude Include="RS232.h" />
     <ClInclude Include="utilities.h" />
   </ItemGroup>

@@ -42,11 +42,13 @@ typedef enum {
 #define DEFAULT_TRANSMIT_PRIO   0x00
 #define HEADERSIZE  32
 #define DEFAULT_COMPRESSION_CHOICE  TRUE_B;
+#define DEFAULT_HASH_CHOICE TRUE_B;
 
 static char stationID = DEFAULT_STATION_ID;
 static char targetID = DEFAULT_TARGET_ID;
 static char transmitPriority = DEFAULT_TRANSMIT_PRIO;
 static BOOLYN isCompression = DEFAULT_COMPRESSION_CHOICE;
+static BOOLYN isHash = DEFAULT_HASH_CHOICE;
 
 HEADER *header_init(FILETYPE usrFileType, long sizeBuf,
 	                short sampleSec, short recordSec, BOOLYN isCompressed);
@@ -58,3 +60,4 @@ int setGlobalTargetID(char *inputID);
 int setGlobalPriority(char *inputPrio);
 int setGlobalCompression(BOOLYN *option);
 void printGlobalSetting(void);
+int setGlobalHash(BOOLYN *option);

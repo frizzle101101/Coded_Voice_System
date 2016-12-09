@@ -12,6 +12,7 @@
 #include "header.h"
 #include "prioQueue.h"
 #include "bst.h"
+#include "rle.h"
 #include "menu.h"
 
 #define DEFAULT_RECORD_TIME		2		// seconds to record for
@@ -51,9 +52,11 @@ int	main(int argc, char *argv[])
 	char *bmpRaw;
 	FILETYPE usrFileType;
 	BOOLYN isCompressed = DEFAULT_COMPRESSION_OPTION;
+	BOOLYN isHash;
 	void *rcvBuf;
 	int *commPort = NULL;
 	int *baudrate = NULL;
+	int rcvByte;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
@@ -61,7 +64,6 @@ int	main(int argc, char *argv[])
 	phoneBook = bst_init();
 
 	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
-
 	char input[MAX];
 	char *str1;
 
@@ -260,51 +262,53 @@ int	main(int argc, char *argv[])
 				break;
 			}
 			break;
-		case PRIORITY:
-			setPriority(&transmitPrio);
-			break;
 		case RECEIVE:
 			initPort();
 
-			if (inputFromPort(&rcvPayload) != -1) {
+			if (rcvByte = inputFromPort(&rcvPayload)) {
 
-				if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
-					printf("DETECT ERRONEOUS MESSAGE\n");
-					printf("Press any key to continue..\n");
-					fgetc(stdin);
-					while (getchar() != '\n');
+				if ((rcvByte != -1) && (rcvByte >= 32)) {
+					if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
+						printf("DETECT ERRONEOUS MESSAGE\n");
+						printf("Press any key to continue..\n");
+						fgetc(stdin);
+						while (getchar() != '\n');
+						purgePort();
+						CloseHandle(getCom());
+						break;
+					}
+
+					if (rcvHdr->flags & AUDIO_F) {
+						PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
+						ClosePlayback();
+					}
+
+					if (rcvHdr->flags & BMP_F) {
+						FILE *fp;
+
+						fp = fopen("receiveBMP.bmp", "wb");
+						fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
+						fclose(fp);
+
+						DrawBMP("receiveBMP.bmp", 0, 400);
+					}
+
+					rcvNode = (NODE *)malloc(sizeof(NODE));
+					rcvNode->data = rcvPayload;
+					enqueue(rcvQ, rcvNode);
+
+					prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
+
+					tmpBstNode = bst_node_init();
+					tmpBstNode->data = rcvHdr->senderID;
+					bst_insert(&phoneBook->root, tmpBstNode);
+
 					purgePort();
 					CloseHandle(getCom());
-					break;
 				}
-
-				if (rcvHdr->flags & AUDIO_F) {
-					PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
-					ClosePlayback();
-				}
-
-				if (rcvHdr->flags & BMP_F) {
-					FILE *fp;
-
-					fp = fopen("receiveBMP.bmp", "wb");
-					fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
-					fclose(fp);
-
-					DrawBMP("receiveBMP.bmp", 0, 400);
-				}
-
-				rcvNode = (NODE *)malloc(sizeof(NODE));
-				rcvNode->data = rcvPayload;
-				enqueue(rcvQ, rcvNode);
-
-				prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
-
-				tmpBstNode = bst_node_init();
-				tmpBstNode->data = rcvHdr->senderID;
-				bst_insert(&phoneBook->root, tmpBstNode);
-
-				purgePort();
-				CloseHandle(getCom());
+			}
+			else {
+				printf("DETECT ERRONEOUS MESSAGE\n");
 			}
 			printf("Press any key to continue..\n");
 			fgetc(stdin);
@@ -344,8 +348,10 @@ int	main(int argc, char *argv[])
 			/* Sending BMP*/
 			fp = fopen("sample.bmp", "rb");
 
-			if (!fp)
+			if (!fp) {
 				printf("Failed to open bmp file\n");
+				break;
+			}
 
 			fseek(fp, 0, SEEK_END);
 			bmpSize = ftell(fp);
@@ -367,9 +373,35 @@ int	main(int argc, char *argv[])
 			purgePort();									// Purge the port
 			CloseHandle(getCom());							// Closes the handle pointing to the COM port
 
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
 			break;
 		case SETTINGS:
-			settings();
+			printGlobalSetting();
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
+			break;
+		case SETCMPRS:
+			setGlobalCompression(&isCompressed);
+			break;
+		case SETHASH:
+			setGlobalCompression(&isCompressed);
+			break;
+		case SETBAUD:
+			setBaudrate(&baudrate);
+			setGlobalBaudRate(baudrate);
+			break;
+		case SETBAUDID:
+			setGlobalBaudRate(baudrate);
+			break;
+		case SETCOM:
+			setCommPort(&commPort);
+			setGlobalCommPort(*commPort);
+			break;
+		case SETCOMID:
+			setGlobalCommPort(*commPort);
 			break;
 		case TESTAUDIO:
 			/* Audio Packaging Diagnostic */
@@ -435,29 +467,44 @@ int	main(int argc, char *argv[])
 			break;
 		case TESTBMP:
 			/* BMP File Diagnostic*/
+			unsigned char *bmpCompressed;
+			unsigned char *bmpDecompressed;
+			int bmpCompressedSize;
+			int bmpDeCompressedSize;
 			fp = fopen("sample.bmp", "rb");
 
-			if (!fp)
+			if (!fp) {
 				printf("Failed to open bmp file\n");
-
+				break;
+			}
 			fseek(fp, 0, SEEK_END);
 			bmpSize = ftell(fp);
 			rewind(fp);
 
-			printf("%d", bmpSize);
+			printf("Original bmp size: %d\n", bmpSize);
 
 			bmpRaw = (char *)malloc(sizeof(char) *bmpSize);
 
 			fread(bmpRaw, sizeof(char), bmpSize, fp);
 			fclose(fp);
 
+			RLEcompress((unsigned char *)bmpRaw, _msize(bmpRaw), &bmpCompressed, &bmpCompressedSize);
+
+			printf("Compresssed bmp size: %d\n", bmpCompressedSize);
+
+			RLEdecompress(bmpCompressed, bmpCompressedSize, &bmpDecompressed, &bmpDeCompressedSize);
+
 			fp = fopen("raw.bmp", "wb");
-			fwrite(bmpRaw, sizeof(char), bmpSize, fp);
+			fwrite(bmpDecompressed, sizeof(char), bmpDeCompressedSize, fp);
 			fclose(fp);
 
 			DrawBMP("raw.bmp", 0, 400);
 
 			free(bmpRaw);
+
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
 			break;
 		case REMOVE:
 			remove();
