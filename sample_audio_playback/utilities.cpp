@@ -2,7 +2,9 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <conio.h>
+#include <time.h>
 #include "utilities.h"
+
 
 #define MAX_RECORD_SEC 64
 #define MAX_TMP_BUFF 8

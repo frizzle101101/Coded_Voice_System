@@ -15,7 +15,7 @@ static int repetition_vote(HEADER *usrHeader)
 {
 	int voteCount = 0;
 
-	printf("0x%02x 0x%02x\n", stationID, usrHeader->rcverID);
+	printf("My stationID 0x%02x Targeted ID 0x%02x\n", stationID, usrHeader->rcverID);
 	if (usrHeader->rcverID == stationID) 
 		voteCount++;
 
@@ -224,7 +224,7 @@ int payload_unpack(HEADER **usrHeader, void **outBuf, void *payload)
 	unsigned char *rcvContent;
 	unsigned char *compressed_content;
 
-	printf("%d size of payload", _msize(payload));
+	printf("size of payload: %d bytes\n", _msize(payload));
 	tmpHdr = (HEADER *)malloc(sizeof(HEADER));
 
 	memmove_s(tmpHdr, sizeof(HEADER), payload, sizeof(HEADER));

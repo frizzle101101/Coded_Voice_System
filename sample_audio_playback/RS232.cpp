@@ -59,9 +59,6 @@ void outputToPort(LPCVOID buf1, DWORD szBuf) {
 		NULL
 	);
 
-	printf("%d\n", NumberofBytesTransmitted);
-	_sleep(2000);
-	// Handle the timeout error
 	if (i == 0) {
 		printf("\nWrite Error: 0x%x\n", GetLastError());
 		ClearCommError(hCom, lpErrors, lpStat);		// Clears the device error flag to enable additional input and output operations. Retrieves information ofthe communications error.	
