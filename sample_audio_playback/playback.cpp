@@ -73,7 +73,7 @@ int InitializePlayBacking(int sample_sec)
 
 /* PlayBuffer()
  */
-int PlayBuffer( short *piBuf, long lSamples, int sample_sec)
+int PlayBuffer( short *piBuf, long bufferSize, int sample_sec)
 {
 	MMRESULT	mmErr;
 	int		rc;
@@ -84,7 +84,7 @@ int PlayBuffer( short *piBuf, long lSamples, int sample_sec)
 
 	// get the header ready for playback
 	WaveHeader.lpData = (char *)piBuf;
-	WaveHeader.dwBufferLength = lSamples*sizeof(short);
+	WaveHeader.dwBufferLength = bufferSize;
 	rc = waveOutPrepareHeader(HWaveOut, &WaveHeader, sizeof(WAVEHDR));
 	if ( rc ) {
 		Errorp( "Failed preparing WAVEHDR, error 0x%x.", rc);

@@ -50,7 +50,7 @@ static BOOLYN isCompression = DEFAULT_COMPRESSION_CHOICE;
 
 HEADER *header_init(FILETYPE usrFileType, long sizeBuf,
 	                short sampleSec, short recordSec, BOOLYN isCompressed);
-void *payload_pack(HEADER *usrHeader, void *contentBuf);
+void *payload_pack(HEADER *usrHeader, void* contentBuf);
 int payload_unpack(HEADER **usrHeader, void **audioBuf, void *payload);
 void print_header(HEADER *usrHeader);
 int setGlobalStationID(char *inputID);

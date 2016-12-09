@@ -13,7 +13,7 @@
 #include "prioQueue.h"
 #include "bst.h"
 
-#define DEFAULT_RECORD_TIME		2		// seconds to record for
+#define DEFAULT_RECORD_TIME		1		// seconds to record for
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
 #define WAITTIME 40
 #define DEFAULT_COMPRESSION_OPTION TRUE_B
@@ -72,11 +72,6 @@ int	main(int argc, char *argv[])
 			case '1':
 				RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
 				CloseRecording();
-				/*
-				fpw = fopen(audioFile[i], "w+b");
-				fwrite(audio_buff, sizeof(short), audio_buff_sz, fpw);
-				fclose(fpw);
-				i++;*/
 				break;
 			case '2':
 				if (!audio_buff) {
@@ -84,8 +79,12 @@ int	main(int argc, char *argv[])
 					break;
 				} else {
 					printf("Playing..\n");
-					PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+					PlayBuffer(audio_buff, _msize(audio_buff), sample_sec);
+					printf("%d %d\n", audio_buff_sz, sample_sec);
 					ClosePlayback();
+					printf("Press any key to continue..\n");
+					fgetc(stdin);
+					while (getchar() != '\n');
 					break;
 				}
 			case '3':
@@ -93,19 +92,16 @@ int	main(int argc, char *argv[])
 				tmpHdr = header_init(usrFileType, _msize(audio_buff),
 					                 sample_sec, record_time, isCompressed);
 				payload = payload_pack(tmpHdr, audio_buff);
-				//payload_unpack(&rcvHdr, &audio_rcv, payload);
-				//PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				initPort();
-				printf("sending..%d", _msize(payload));
-				outputToPort(payload, _msize(payload));			// Send audio to port
-				purgePort();									// Purge the port
-				CloseHandle(getCom());							// Closes the handle pointing to the COM port
+				printf("sending %d bytes...", _msize(payload));
+				outputToPort(payload, _msize(payload));
+				purgePort();	
+				CloseHandle(getCom());							
 				break;
 			case '4':
 				initPort();
 
 				inputFromPort(&rcvPayload);
-				printf("rcvPayload pointer %p", rcvPayload);
 
 				if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
 					printf("DETECT ERRONEOUS MESSAGE\n");
@@ -120,6 +116,16 @@ int	main(int argc, char *argv[])
 				if (rcvHdr->flags & AUDIO_F) {
 					PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
 					ClosePlayback();
+				}
+
+				if (rcvHdr->flags & BMP_F) {
+					FILE *fp;
+
+					fp = fopen("receiveBMP.bmp", "wb");
+					fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
+					fclose(fp);
+
+					DrawBMP("receiveBMP.bmp", 0, 400);
 				}
 
 				rcvNode = (NODE *)malloc(sizeof(NODE));

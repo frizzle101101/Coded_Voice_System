@@ -11,7 +11,7 @@
 #define SUCESSSEQ "DEADBEEF"
 #define FTLERR "FTLERR"
 #define WAITTIME 40
-#define PORT "\\\\.\\COM10"
+#define PORT "\\\\.\\COM11"
 #define MAX_STACK_SIZE 1000000
 static HANDLE hCom;										// Pointer to a COM port
 #define COMBYTESIZE  8									// Number of bits per frame
@@ -107,8 +107,6 @@ int inputFromPort(LPVOID *rcvPayload) {
 	
 		
 }
-
-
 
 // Sub functions called by above functions
 /**************************************************************************************/
