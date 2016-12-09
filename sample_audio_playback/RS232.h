@@ -13,3 +13,4 @@ static int SetComParms();
 HANDLE getCom(void);
 void setGlobalCommPort(int inputComm);
 void setGlobalBaudRate(int *inputBaud);
+void printGlobalRS232Param(void);
