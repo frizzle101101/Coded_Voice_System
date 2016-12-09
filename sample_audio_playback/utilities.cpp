@@ -179,13 +179,18 @@ void displayHelp(char *fileName)
 	int c;
 
 	fp = fopen(fileName, "r");
-	while (1)
-	{
-		c = fgetc(fp);
-		if (feof(fp))
-			break;
-		printf("%c", c);
+
+	if (fp) {
+		while (1)
+		{
+			c = fgetc(fp);
+			if (feof(fp))
+				break;
+			printf("%c", c);
+		}
+		printf("\n");
+		fclose(fp);
+	} else {
+		printf("File: %s not found!\n");
 	}
-	printf("\n");
-	fclose(fp);
 }
