@@ -150,6 +150,7 @@
     <ClCompile Include="huffman.c" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="mainbackup.cpp" />
+    <ClCompile Include="menu.cpp" />
     <ClCompile Include="playback.cpp" />
     <ClCompile Include="prioQueue.cpp" />
     <ClCompile Include="queue.cpp" />

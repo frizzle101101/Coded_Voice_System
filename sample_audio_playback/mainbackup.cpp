@@ -18,7 +18,8 @@
 #define DEFAULT_SAMPLES_SEC		8000	// samples per second
 #define WAITTIME 40
 #define DEFAULT_COMPRESSION_OPTION TRUE_B
-
+#undef ISMAIN
+#ifdef ISMAIN
 int	main(int argc, char *argv[])
 {
 	char option;
@@ -360,3 +361,4 @@ int	main(int argc, char *argv[])
 	}
 	return(0);
 }
+#endif
