@@ -3,11 +3,14 @@
 #include <ctype.h>
 #include <conio.h>
 #include <time.h>
+#include <string.h>
 #include "utilities.h"
 
 
 #define MAX_RECORD_SEC 64
 #define MAX_TMP_BUFF 8
+#define MAX_STACK_SIZE 100000
+
 void menu(int sample_sec, int record_time, int qCount) 
 {
 	printf("Welcome to Audio Playback Demo!\n");
@@ -195,4 +198,16 @@ void displayHelp(char *fileName)
 	} else {
 		printf("File: %s not found!\n");
 	}
+}
+
+char *composeMsg(void)
+{
+	char *tmp;
+
+	tmp = (char *)malloc(sizeof(char) * MAX_STACK_SIZE);
+	printf("Enter a text messsage\n");
+	fgets(tmp, MAX_STACK_SIZE, stdin);
+	tmp = (char *)realloc(tmp, strlen(tmp) + 1);
+
+	return tmp;
 }
