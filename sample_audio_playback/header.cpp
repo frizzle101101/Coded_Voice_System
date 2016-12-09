@@ -69,7 +69,7 @@ static int populateIDs(HEADER *usrHeader)
 	return rc;
 }
 
-HEADER *header_init(char *prio, FILETYPE usrFileType, long sizeBuf, 
+HEADER *header_init(FILETYPE usrFileType, long sizeBuf, 
 	                short sampleSec, short recordSec, BOOLYN isCompressed)
 {
 	int rc;
@@ -82,15 +82,8 @@ HEADER *header_init(char *prio, FILETYPE usrFileType, long sizeBuf,
 	tmp->lSignature = DEADBEEF;
 	tmp->lDataLength = sizeBuf;
 	tmp->clDataLength = 0;
-
 	populateIDs(tmp);
-
-	if (prio) {
-		transmitPriority = *prio;
-	}
-
 	tmp->priority = transmitPriority;
-
 	tmp->flags = 0;
 
 	switch (usrFileType) {
@@ -140,6 +133,40 @@ int setGlobalTargetID(char *inputID)
 	return rc;
 }
 
+int setGlobalPriority(char *inputPrio)
+{
+	int rc = 0;
+
+	if (inputPrio)
+		 transmitPriority = *inputPrio;
+	else
+		rc = -EINVAL;
+
+	return rc;
+}
+
+int setGlobalCompression(BOOLYN *option)
+{
+	int rc = 0;
+
+	if (option)
+		isCompression = *option;
+	else
+		rc = -EINVAL;
+
+	return rc;
+}
+
+void printGlobalSetting(void)
+{
+	printf("StationID: %02x\n", stationID);
+	printf("targetID: %02x\n", targetID);
+	printf("Current Priority: %d\n", transmitPriority);
+	if (isCompression == TRUE_B)
+		printf("Compression: ON\n");
+	else
+		printf("Compression: OFF\n");
+}
 
 void *payload_pack(HEADER *usrHeader, void *contentBuf)
 {
@@ -173,7 +200,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 			memmove_s(pkgedCompressedContent, _msize(pkgedCompressedContent), compressedContent, usrHeader->clDataLength);
 			printf("msize pkgedCompressedContent:%d cldatalength:%d\n", _msize(pkgedCompressedContent), usrHeader->clDataLength);
 			printf("Post-compressed test\n");
-			PlayBuffer((short *)huffman_decmp_wrapper(pkgedCompressedContent, usrHeader->lDataLength), 16000, 8000);
+			PlayBuffer((short *)huffman_decmp_wrapper(pkgedCompressedContent, usrHeader->lDataLength), usrHeader->lDataLength, usrHeader->sampleSec);
 
 
 			//printf("%d\n", usrHeader->clDataLength);
@@ -199,7 +226,7 @@ void *payload_pack(HEADER *usrHeader, void *contentBuf)
 
 	return tmp;
 }
-int payload_unpack(HEADER **usrHeader, short **audioBuf, void *payload)
+int payload_unpack(HEADER **usrHeader, void **audioBuf, void *payload)
 {
 	int rc = 0;
 	HEADER *tmpHdr;

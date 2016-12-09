@@ -103,6 +103,19 @@ void setTargetID(char **targetID)
 	} while ((**targetID <= 0) && (**targetID > 255));
 }
 
+char setCompression(void)
+{
+	char tmp;
+	do {
+		printf("Set Huffman Compression (y/n)\n");
+		tmp = fgetc(stdin);
+		system("CLS");
+	} while ((tmp != 'y') && (tmp!= 'n'));
+
+	while (getchar() != '\n');
+	return tmp;
+}
+
 void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)
 {
 	(*audio_buff_sz) = sample_sec * record_time;

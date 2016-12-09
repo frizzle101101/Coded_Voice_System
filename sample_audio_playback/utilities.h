@@ -10,5 +10,6 @@ void getNewParam(int *sample_sec, int *record_time);
 void setPriority(char **prio);
 void setStationID(char **stationID);
 void setTargetID(char **targetID);
+char setCompression(void);
 void menu(int sample_sec, int record_time, int qCount);
 void cp_menu();

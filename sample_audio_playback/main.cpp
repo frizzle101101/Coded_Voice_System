@@ -49,6 +49,7 @@ int	main(int argc, char *argv[])
 	char *bmpRaw;
 	FILETYPE usrFileType;
 	BOOLYN isCompressed = DEFAULT_COMPRESSION_OPTION;
+	void *rcvBuf;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
@@ -89,7 +90,7 @@ int	main(int argc, char *argv[])
 				}
 			case '3':
 				usrFileType = AUDIO_T;
-				tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff),
+				tmpHdr = header_init(usrFileType, _msize(audio_buff),
 					                 sample_sec, record_time, isCompressed);
 				payload = payload_pack(tmpHdr, audio_buff);
 				//payload_unpack(&rcvHdr, &audio_rcv, payload);
@@ -104,8 +105,9 @@ int	main(int argc, char *argv[])
 				initPort();
 
 				inputFromPort(&rcvPayload);
+				printf("rcvPayload pointer %p", rcvPayload);
 
-				if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
+				if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
 					printf("DETECT ERRONEOUS MESSAGE\n");
 					printf("Press any key to continue..\n");
 					fgetc(stdin);
@@ -116,42 +118,50 @@ int	main(int argc, char *argv[])
 				}
 
 				if (rcvHdr->flags & AUDIO_F) {
-					PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
+					PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
 					ClosePlayback();
-
-					rcvNode = (NODE *)malloc(sizeof(NODE));
-					rcvNode->data = audio_rcv;
-					enqueue(rcvQ, rcvNode);
-
-					prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
-
-					tmpBstNode = bst_node_init();
-					tmpBstNode->data = rcvHdr->senderID;
-					bst_insert(&phoneBook->root, tmpBstNode);
 				}
+
+				rcvNode = (NODE *)malloc(sizeof(NODE));
+				rcvNode->data = rcvPayload;
+				enqueue(rcvQ, rcvNode);
+
+				prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
+
+				tmpBstNode = bst_node_init();
+				tmpBstNode->data = rcvHdr->senderID;
+				bst_insert(&phoneBook->root, tmpBstNode);
 
 				purgePort();
 				CloseHandle(getCom());
+
+				printf("Press any key to continue..\n");
+				fgetc(stdin);
+				while (getchar() != '\n');
 				break;
 			case '5':
-				//getNewParam(&sample_sec, &record_time);
+				if (setCompression() == 'n')
+					isCompressed = FALSE_B;
+				setGlobalCompression(&isCompressed);
+				getNewParam(&sample_sec, &record_time);
+				initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
 				setPriority(&transmitPrio);
+				setGlobalPriority(transmitPrio);
 				setStationID(&stationID);
 				setGlobalStationID(stationID);
 				setTargetID(&targetID);
 				setGlobalTargetID(targetID);
-				//initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMREALLOC);
 				break;
 			case '6':
 				/* Audio Packaging Diagnostic */
 				printf("Packaging...\n");
 				usrFileType = AUDIO_T;
-				tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+				tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
 				payload = payload_pack(tmpHdr, audio_buff);
 
 				printf("Unpacking and play...\n");
 				if (payload) {
-					payload_unpack(&rcvHdr, &audio_rcv, payload);
+					payload_unpack(&rcvHdr, (void **)&audio_rcv, payload);
 					printf("Playing..\n");
 					PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 					ClosePlayback();
@@ -163,13 +173,21 @@ int	main(int argc, char *argv[])
 			case '7':
 				/* Display Queue, Priority Queue and Phonebook*/
 				printf("Dequeueing Normal Queue\n");
-				while ((tmp = dequeue(rcvQ)) != NULL)
-					PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+				while ((tmp = dequeue(rcvQ)) != NULL) {
+					printf("Deq pointer %p\n", tmp);
+					payload_unpack(&rcvHdr, &rcvBuf, tmp->data);
+
+					if(rcvHdr->flags & AUDIO_F)
+						PlayBuffer((short *)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
+				}
 
 				printf("Dequeueing Priority Queue\n");
 				while ((tmpPQ = prioDequeue(rcvPQ)) != NULL) {
 					while ((tmp = dequeue(tmpPQ->queue)) != NULL) {
-						PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+						payload_unpack(&rcvHdr, &rcvBuf, tmp->data);
+
+						if (rcvHdr->flags & AUDIO_F)
+							PlayBuffer((short *)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
 					}
 				}
 
@@ -214,7 +232,7 @@ int	main(int argc, char *argv[])
 			case 'a':
 				/* Header Diagnostic */
 				usrFileType = AUDIO_T;
-				tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+				tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
 				print_header(tmpHdr);
 
 				printf("Press any key to continue..\n");
@@ -248,6 +266,7 @@ int	main(int argc, char *argv[])
 				free(bmpRaw);
 				break;
 			case 'c':
+				/* Sending BMP*/
 				fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
 
 				if (!fp)
@@ -262,7 +281,7 @@ int	main(int argc, char *argv[])
 				fread(bmpRaw, sizeof(char), bmpSize, fp);
 
 				usrFileType = BMP_T;
-				tmpHdr = header_init(transmitPrio, usrFileType, _msize(bmpRaw),
+				tmpHdr = header_init(usrFileType, _msize(bmpRaw),
 					sample_sec, record_time, isCompressed);
 
 				payload = payload_pack(tmpHdr, bmpRaw);
@@ -273,6 +292,12 @@ int	main(int argc, char *argv[])
 				purgePort();									// Purge the port
 				CloseHandle(getCom());							// Closes the handle pointing to the COM port
 
+				break;
+			case 'd':
+				printGlobalSetting();
+				printf("Press any key to continue..\n");
+				fgetc(stdin);
+				while (getchar() != '\n');
 				break;
 			default:
 				printf("Please Enter a valid option 1-4!\n");
