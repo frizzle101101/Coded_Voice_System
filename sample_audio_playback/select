@@ -1,0 +1,14 @@
+COMMAND
+    select
+
+SYNOPSIS
+    select [ID] [OPTIONS]
+
+DESCRIPTION
+Sets/Selects the global reciever or sender Id
+
+OPTIONS
+r               Sets the ID to the global receiver Id. If ID is missing then
+                prompts user for receiver Id.
+s               Sets the ID to the global sender Id. If ID is missing then
+                prompts user for sender Id.

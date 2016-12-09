@@ -176,11 +176,17 @@
     <ClInclude Include="utilities.h" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="compose" />
+    <None Include="display" />
     <None Include="help" />
     <None Include="playback" />
     <None Include="playback all" />
+    <None Include="receive" />
     <None Include="record" />
+    <None Include="select" />
     <None Include="send" />
+    <None Include="set" />
+    <None Include="settings" />
     <None Include="test" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

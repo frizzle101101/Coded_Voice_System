@@ -1,11 +1,11 @@
 COMMAND
-    record
+    receive
 
 SYNOPSIS
-    record 
+    receive
 
 DESCRIPTION
-Record audio file through recording device. Store in program audio buffer.
+Waits(A blocking call) for a RS-232 comm port to start receiving data.
 
 OPTIONS
 Command has no options. Command will fail if no recording

@@ -155,6 +155,8 @@ int	main(int argc, char *argv[])
 				options = SENDAUDIO;
 			else if (strcmp("b", str1) == 0)
 				options = SENDBMP;
+			else if (strcmp("t", str1) == 0)
+				options = SENDTEXT;
 		}
 		else if (strcmp("settings", str1) == 0)
 			options = SETTINGS;

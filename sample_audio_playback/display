@@ -1,0 +1,12 @@
+COMMAND
+    display
+
+SYNOPSIS
+    display 
+
+DESCRIPTION
+Print message currently saved in program text buffer to console. Command will
+fail if no text saved. Must use compose before playback can be used.
+
+OPTIONS
+Command has no options.

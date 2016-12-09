@@ -127,5 +127,23 @@
     <None Include="test">
       <Filter>Resource Files</Filter>
     </None>
+    <None Include="compose">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="display">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="receive">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="select">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="set">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="settings">
+      <Filter>Resource Files</Filter>
+    </None>
   </ItemGroup>
 </Project>
