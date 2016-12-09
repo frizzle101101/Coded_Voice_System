@@ -66,7 +66,7 @@ int	main(int argc, char *argv[])
 	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
 	char input[MAX];
 	char *str1 = NULL;
-	char *helpstat = NULL;
+	char helpstat[MAX];
 
 	OPTIONS options;
 	//gets_s(input);
@@ -82,9 +82,9 @@ int	main(int argc, char *argv[])
 			options = HELP;
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-				helpstat = strcpy(helpstat, "help");
+				strcpy(helpstat, "help");
 			else
-				helpstat = strcpy(helpstat, str1);
+				strcpy(helpstat, str1);
 		}
 		else if (strcmp("compose", str1) == 0)
 			options = COMPOSE;
@@ -120,7 +120,7 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("select", str1) == 0)
 		{
-			helpstat = strcpy(helpstat, str1);
+			strcpy(helpstat, str1);
 			char *tempId = strtok(NULL, " -");
 			if (tempId == NULL)
 				options = HELP;
@@ -147,7 +147,7 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("send", str1) == 0)
 		{
-			helpstat = strcpy(helpstat, str1);
+			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				options = HELP;
@@ -160,7 +160,7 @@ int	main(int argc, char *argv[])
 			options = SETTINGS;
 		else if (strcmp("set", str1) == 0)
 		{
-			helpstat = strcpy(helpstat, str1);
+			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				options = HELP;
@@ -224,7 +224,7 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("test", str1) == 0)
 		{
-			helpstat = strcpy(helpstat, str1);
+			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				options = HELP;
