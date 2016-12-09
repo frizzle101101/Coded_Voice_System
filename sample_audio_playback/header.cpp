@@ -159,6 +159,18 @@ int setGlobalCompression(BOOLYN *option)
 	return rc;
 }
 
+int setGlobalHash(BOOLYN *option)
+{
+	int rc = 0;
+
+	if (option)
+		isHash = *option;
+	else
+		rc = -EINVAL;
+
+	return rc;
+}
+
 void printGlobalSetting(void)
 {
 	printf("StationID: %02x\n", stationID);
@@ -204,6 +216,7 @@ void *payload_pack(HEADER *usrHeader, void* contentBuf)
 
 	return tmp;
 }
+
 int payload_unpack(HEADER **usrHeader, void **outBuf, void *payload)
 {
 	int rc = 0;
@@ -239,8 +252,12 @@ int payload_unpack(HEADER **usrHeader, void **outBuf, void *payload)
 	}
 
 	*outBuf = rcvContent;
-	rc = hash_check(tmpHdr, rcvContent);
-	
+
+	if (isHash == TRUE_B)
+		rc = hash_check(tmpHdr, rcvContent);
+	else
+		printf("No Hash Check\n");
+
 	if (rc)
 		return rc;
 

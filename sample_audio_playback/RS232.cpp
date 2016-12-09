@@ -101,6 +101,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 		} while (NumberofBytesRead > 0);
 
 		printf("\nTotal bytes received!: %d\n", i);
+
 		payload = malloc(sizeof(char) * i);
 		memcpy(payload, serial, i);
 		*rcvPayload = payload;

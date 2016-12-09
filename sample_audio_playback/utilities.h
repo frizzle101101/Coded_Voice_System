@@ -13,5 +13,6 @@ void setTargetID(char **targetID);
 char setCompression(void);
 void setCommPort(int **commPort);
 void setBaudrate(int **baudrate);
+char setHashCheck(void);
 void menu(int sample_sec, int record_time, int qCount);
 void cp_menu();
