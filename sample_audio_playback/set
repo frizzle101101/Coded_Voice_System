@@ -1,0 +1,24 @@
+COMMAND
+    set
+
+SYNOPSIS
+    set [OPTION] [PARAM1] [PARAM2]
+
+DESCRIPTION
+Set various parameters based on input option.
+
+OPTIONS       PARAM1        PARAM2
+cmprs         1                           Turn ON compression.
+              0                           Turn OFF comprtession.
+hash          1                           Turn ON hashing.
+              0                           Turn OFF hashing.
+audioparams   sample_rate   record_time   Sets the global recording sample
+                                          rate and recording time.
+                                          *Not current implementation.
+                                          *current implement prompts user for
+                                          these settings.
+priority      priority_num                Sets priority of data on outgoing transmissions.
+baud          baud_rate                   Sets the global baud rate for 
+                                          transmission and receiving.
+com           com_port                    Sets the global com port for 
+                                          transmission and receiving.

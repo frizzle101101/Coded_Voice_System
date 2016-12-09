@@ -1,11 +1,17 @@
-NAME
+COMMAND
     test
+
 SYNOPSIS
     test [OPTION]
 
 DESCRIPTION
 Run various diagnostic function depends on input option.
 
-    -TESTAUDIO        Test Audio with header packaging and unpacking.
-	-TESTPRIQU        Test priority queue with pre-recorded audio files.
-	-TESTPHONEBOOK    Test phonebook datastructure by displaying everything in the tree.
+OPTIONS
+-a              Test Audio with header packaging and unpacking.
+-pq             Test priority queue with pre-recorded audio files.
+-pb             Test phonebook datastructure by displaying everything in the tree.
+-h              Test header by printing out header's parameters after header_init().
+-b              Test BMP file by reading and writing bmp file and display the
+                written bmp file. The test also including compressing and decompressing
+                using RLE algorithm.
