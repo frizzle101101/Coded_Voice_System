@@ -1,0 +1,11 @@
+COMMAND
+    settings
+
+SYNOPSIS
+    settings 
+
+DESCRIPTION
+Display all of the programs changeable global setttings.
+
+OPTIONS
+Command has no options.

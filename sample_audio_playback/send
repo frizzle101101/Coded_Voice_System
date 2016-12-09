@@ -8,5 +8,6 @@ DESCRIPTION
 Send data out through RS-232 using global settings.
 
 OPTIONS
--a              Send audio.
+-a              Send audio buffer.
 -b              Send sample bmp file.
+-t              Send text buffer.
