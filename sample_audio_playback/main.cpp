@@ -79,31 +79,10 @@ int	main(int argc, char *argv[])
 		str1 = strtok(input, " -");
 		if (strcmp("help", str1) == 0)
 		{
-			str1 = strtok(NULL, " -");			
-			if (strcmp("compose", str1) == 0)
-				options = HELPCOMPOSE;
-			else if (strcmp("display", str1) == 0)
-				options = HELPDISPLAY;
-			else if (strcmp("playback", str1) == 0)
-				options = HELPPLAYBACK;
-			else if (strcmp("receive", str1) == 0)
-				options = HELPRECEIVE;
-			else if (strcmp("record", str1) == 0)
-				options = HELPRECORD;
-			else if (strcmp("select", str1) == 0)
-				options = HELPSELECT;
-			else if (strcmp("select", str1) == 0)
-				options = HELPINSERT;
-			else if (strcmp("settings", str1) == 0)
-				options = HELPSETTINGS;
-			else if (strcmp("remove", str1) == 0)
-				options = HELPREMOVE;
-
+			options = HELP;
+			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-			{
 				helpstat = strcpy(helpstat, "help");
-				options = HELP;
-			}
 			else
 				helpstat = strcpy(helpstat, str1);
 		}
@@ -141,9 +120,10 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("select", str1) == 0)
 		{
+			helpstat = strcpy(helpstat, str1);
 			char *tempId = strtok(NULL, " -");
 			if (tempId == NULL)
-				options = HELPSELECT;
+				options = HELP;
 			else if (strcmp("r", tempId) == 0)
 				options = SELECTR;
 			else if (strcmp("s", tempId) == 0)
@@ -152,7 +132,7 @@ int	main(int argc, char *argv[])
 			{
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
-					options = HELPSELECT;
+					options = HELP;
 				else if (strcmp("r", str1) == 0)
 				{
 					targetID = tempId;
@@ -167,9 +147,10 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("send", str1) == 0)
 		{
+			helpstat = strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-				options = HELPSEND;
+				options = HELP;
 			else if (strcmp("a", str1) == 0)
 				options = SENDAUDIO;
 			else if (strcmp("b", str1) == 0)
@@ -179,14 +160,15 @@ int	main(int argc, char *argv[])
 			options = SETTINGS;
 		else if (strcmp("set", str1) == 0)
 		{
+			helpstat = strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-				options = HELPSET;
+				options = HELP;
 			else if (strcmp("cmprs", str1) == 0)
 			{
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
-					options = HELPSET;
+					options = HELP;
 				else if (strcmp("1", str1) == 0)
 					isCompressed = TRUE_B;
 				else if (strcmp("0", str1) == 0)
@@ -197,7 +179,7 @@ int	main(int argc, char *argv[])
 			{
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
-					options = HELPSET;
+					options = HELP;
 				else if (strcmp("1", str1) == 0)
 					isHash = TRUE_B;
 				else if (strcmp("0", str1) == 0)
@@ -242,9 +224,10 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("test", str1) == 0)
 		{
+			helpstat = strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-				options = HELPTEST;
+				options = HELP;
 			else if (strcmp("a", str1) == 0)
 				options = TESTAUDIO;
 			else if (strcmp("pq", str1) == 0)
@@ -256,8 +239,6 @@ int	main(int argc, char *argv[])
 			else if (strcmp("b", str1) == 0)
 				options = TESTBMP;
 		}
-		else if (strcmp("remove", str1) == 0)
-			options = REMOVE;
 		else
 			printf("invlaid input. Defaulting to help\n");
 
@@ -266,34 +247,7 @@ int	main(int argc, char *argv[])
 		switch (options)
 		{
 		case HELP:
-			helpmenu();
-			break;
-		case HELPCOMPOSE:
-			helpcompose();
-			break;
-		case HELPDISPLAY:
-			helpdisplay();
-			break;
-		case HELPPLAYBACK:
-			helpplayback();
-			break;
-		case HELPRECEIVE:
-			helpreceive();
-			break;
-		case HELPRECORD:
-			helprecord();
-			break;
-		case HELPSELECT:
-			helpselect();
-			break;
-		case HELPINSERT:
-			helpsettings();
-			break;
-		case HELPSETTINGS:
-			helpsettings();
-			break;
-		case HELPREMOVE:
-			helpremove();
+			displayHelp(helpstat);
 			break;
 		case COMPOSE:
 			composeMsg();
@@ -455,6 +409,7 @@ int	main(int argc, char *argv[])
 			break;
 		case SETTINGS:
 			printGlobalSetting();
+			printGlobalRS232Param();
 			break;
 		case SETCMPRS:
 			setGlobalCompression(&isCompressed);
@@ -588,9 +543,6 @@ int	main(int argc, char *argv[])
 			printf("Press any key to continue..\n");
 			fgetc(stdin);
 			while (getchar() != '\n');
-			break;
-		case REMOVE:
-			remove();
 			break;
 		}
 	}
