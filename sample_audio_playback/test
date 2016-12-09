@@ -1,0 +1,11 @@
+NAME
+    test
+SYNOPSIS
+    test [OPTION]
+
+DESCRIPTION
+Run various diagnostic function depends on input option.
+
+    -TESTAUDIO        Test Audio with header packaging and unpacking.
+	-TESTPRIQU        Test priority queue with pre-recorded audio files.
+	-TESTPHONEBOOK    Test phonebook datastructure by displaying everything in the tree.

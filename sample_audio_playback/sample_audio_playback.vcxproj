@@ -175,6 +175,14 @@
     <ClInclude Include="RS232.h" />
     <ClInclude Include="utilities.h" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="help" />
+    <None Include="playback" />
+    <None Include="playback all" />
+    <None Include="record" />
+    <None Include="send" />
+    <None Include="test" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
