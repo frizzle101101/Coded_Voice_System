@@ -79,12 +79,21 @@ int inputFromPort(LPVOID *rcvPayload) {
 	char tmp;
 	char serial[MAX_STACK_SIZE];
 	LPVOID payload;
+	int flag = 0;
+	long startTime = 0;
+	long endTime = 0;
+	long resultTime = 0;
 
 	if (!SetCommMask(hCom, EV_RXCHAR))
 		printf("\SetCommMask Error: 0x%x\n", GetLastError());
 
 	if (WaitCommEvent(hCom,&dwCommEvent,NULL))
 	{
+		if (!flag)
+		{
+			flag = 1;
+			startTime = get_nanos();
+		}
 		printf("Incoming message receiving in process...\n");
 		do
 		{
@@ -101,6 +110,14 @@ int inputFromPort(LPVOID *rcvPayload) {
 		} while (NumberofBytesRead > 0);
 
 		printf("\nTotal bytes received!: %d\n", i);
+
+		if (flag)
+		{
+			endTime = get_nanos();
+			resultTime = endTime - startTime;
+		}
+
+		printf("\nTotal Transmission Time: %d\n", resultTime);
 
 		payload = malloc(sizeof(char) * i);
 		memcpy(payload, serial, i);
@@ -196,4 +213,10 @@ void printGlobalRS232Param(void)
 {
 	printf("BaudRate %d\n", baudrate);
 	printf("Comm port: %s\n", port);
+}
+
+static long get_nanos(void) {
+	struct timespec ts;
+	timespec_get(&ts, TIME_UTC);
+	return (long)ts.tv_sec * 1000000000L + ts.tv_nsec;
 }

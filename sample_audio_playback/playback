@@ -1,0 +1,13 @@
+COMMAND
+    playback
+
+SYNOPSIS
+    playback [OPTIONS]
+
+DESCRIPTION
+Play audio currently saved in programs audio buffer. Command will fail if no
+audio recorded. Must use record before playback can be used.
+
+OPTIONS
+-a              Play all the contents recieved in queue, priority queue and
+                phonebook.
