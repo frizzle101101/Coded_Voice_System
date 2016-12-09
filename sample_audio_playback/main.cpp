@@ -369,7 +369,7 @@ int	main(int argc, char *argv[])
 				sample_sec, record_time, isCompressed);
 			payload = payload_pack(tmpHdr, audio_buff);
 			initPort();
-			printf("sending %d bytes...", _msize(payload));
+			printf("sending %d bytes...\n", _msize(payload));
 			outputToPort(payload, _msize(payload));
 			purgePort();
 			CloseHandle(getCom());
