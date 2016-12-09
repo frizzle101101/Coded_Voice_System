@@ -65,7 +65,8 @@ int	main(int argc, char *argv[])
 
 	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
 	char input[MAX];
-	char *str1;
+	char *str1 = NULL;
+	char *helpstat = NULL;
 
 	OPTIONS options;
 	//gets_s(input);
@@ -78,10 +79,8 @@ int	main(int argc, char *argv[])
 		str1 = strtok(input, " -");
 		if (strcmp("help", str1) == 0)
 		{
-			str1 = strtok(NULL, " -");
-			if (str1 == NULL)
-				options = HELP;
-			else if (strcmp("compose", str1) == 0)
+			str1 = strtok(NULL, " -");			
+			if (strcmp("compose", str1) == 0)
 				options = HELPCOMPOSE;
 			else if (strcmp("display", str1) == 0)
 				options = HELPDISPLAY;
@@ -99,6 +98,14 @@ int	main(int argc, char *argv[])
 				options = HELPSETTINGS;
 			else if (strcmp("remove", str1) == 0)
 				options = HELPREMOVE;
+
+			if (str1 == NULL)
+			{
+				helpstat = strcpy(helpstat, "help");
+				options = HELP;
+			}
+			else
+				helpstat = strcpy(helpstat, str1);
 		}
 		else if (strcmp("compose", str1) == 0)
 			options = COMPOSE;
@@ -175,16 +182,63 @@ int	main(int argc, char *argv[])
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				options = HELPSET;
-			else if (strcmp("a", str1) == 0)
+			else if (strcmp("cmprs", str1) == 0)
+			{
+				str1 = strtok(NULL, " -");
+				if (str1 == NULL)
+					options = HELPSET;
+				else if (strcmp("1", str1) == 0)
+					isCompressed = TRUE_B;
+				else if (strcmp("0", str1) == 0)
+					isCompressed = FALSE_B;
 				options = SETCMPRS;
-			else if (strcmp("pq", str1) == 0)
+			}
+			else if (strcmp("hash", str1) == 0)
+			{
+				str1 = strtok(NULL, " -");
+				if (str1 == NULL)
+					options = HELPSET;
+				else if (strcmp("1", str1) == 0)
+					isHash = TRUE_B;
+				else if (strcmp("0", str1) == 0)
+					isHash = FALSE_B;
 				options = SETHASH;
-			else if (strcmp("pb", str1) == 0)
+			}
+			else if (strcmp("audioparams", str1) == 0)
 				options = SETAUDIOPARAMS;
-			else if (strcmp("h", str1) == 0)
-				options = SETBAUD;
-			else if (strcmp("b", str1) == 0)
-				options = SETCOM;
+			else if (strcmp("priority", str1) == 0)
+			{
+				char temp = strtol(strtok(NULL, " -"), NULL, 10);
+				if (temp == NULL)
+					options = SETPRIORITY;
+				else
+				{
+					transmitPrio = &temp;
+					options = SETPRIORITYID;
+				}
+			}
+			else if (strcmp("baud", str1) == 0)
+			{
+				int temp = strtol(strtok(NULL, " -"), NULL, 10);
+				if (temp == NULL)
+					options = SETBAUD;
+				else
+				{
+					baudrate = &temp;
+					options = SETBAUDID;
+				}
+			}
+			else if (strcmp("com", str1) == 0)
+			{
+				int temp = strtol(strtok(NULL, " -"), NULL, 10);
+				if (temp == NULL)
+					options = SETCOM;
+				else
+				{
+					commPort = &temp;
+					options = SETCOMID;
+				}
+			}
 		}
 		else if (strcmp("test", str1) == 0)
 		{
@@ -401,9 +455,6 @@ int	main(int argc, char *argv[])
 			break;
 		case SETTINGS:
 			printGlobalSetting();
-			printf("Press any key to continue..\n");
-			fgetc(stdin);
-			while (getchar() != '\n');
 			break;
 		case SETCMPRS:
 			setGlobalCompression(&isCompressed);
@@ -413,6 +464,13 @@ int	main(int argc, char *argv[])
 			break;
 		case SETAUDIOPARAMS:
 			getNewParam(&sample_sec, &record_time);
+			break;
+		case SETPRIORITY:
+			setPriority(&transmitPrio);
+			setGlobalPriority(transmitPrio);
+			break;
+		case SETPRIORITYID:
+			setGlobalPriority(transmitPrio);
 			break;
 		case SETBAUD:
 			setBaudrate(&baudrate);
