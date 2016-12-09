@@ -165,6 +165,7 @@
     <ClInclude Include="hash.h" />
     <ClInclude Include="header.h" />
     <ClInclude Include="huffman.h" />
+    <ClInclude Include="menu.h" />
     <ClInclude Include="playback.h" />
     <ClInclude Include="prioQueue.h" />
     <ClInclude Include="queue.h" />

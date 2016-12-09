@@ -16,3 +16,4 @@ void setBaudrate(int **baudrate);
 char setHashCheck(void);
 void menu(int sample_sec, int record_time, int qCount);
 void cp_menu();
+void displayHelp(char *fileName);
