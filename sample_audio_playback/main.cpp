@@ -105,7 +105,13 @@ int	main(int argc, char *argv[])
 		else if (strcmp("display", str1) == 0)
 			options = DISPLAY;
 		else if (strcmp("playback", str1) == 0)
-			options = PLAYBACK;
+		{
+			str1 = strtok(NULL, " -");
+			if (str1 == NULL)
+				options = PLAYBACK;
+			else if (strcmp("a", str1) == 0)
+				options = PLAYBACKALL;
+		}
 		else if (strcmp("receive", str1) == 0)
 			options = RECEIVE;
 		else if (strcmp("record", str1) == 0)
@@ -164,6 +170,22 @@ int	main(int argc, char *argv[])
 		}
 		else if (strcmp("settings", str1) == 0)
 			options = SETTINGS;
+		else if (strcmp("set", str1) == 0)
+		{
+			str1 = strtok(NULL, " -");
+			if (str1 == NULL)
+				options = HELPSET;
+			else if (strcmp("a", str1) == 0)
+				options = SETCMPRS;
+			else if (strcmp("pq", str1) == 0)
+				options = SETHASH;
+			else if (strcmp("pb", str1) == 0)
+				options = SETAUDIOPARAMS;
+			else if (strcmp("h", str1) == 0)
+				options = SETBAUD;
+			else if (strcmp("b", str1) == 0)
+				options = SETCOM;
+		}
 		else if (strcmp("test", str1) == 0)
 		{
 			str1 = strtok(NULL, " -");
@@ -222,8 +244,24 @@ int	main(int argc, char *argv[])
 		case COMPOSE:
 			composeMsg();
 			break;
-		case DISPLAY:
-			/* Display Queue, Priority Queue and Phonebook*/
+		case PLAYBACK:
+			if (!audio_buff) {
+				Errorp("Empty Buffer! Please Record audio before playback\n");
+				break;
+			}
+			else {
+				printf("Playing..\n");
+				PlayBuffer(audio_buff, _msize(audio_buff), sample_sec);
+				printf("%d %d\n", audio_buff_sz, sample_sec);
+				ClosePlayback();
+				printf("Press any key to continue..\n");
+				fgetc(stdin);
+				while (getchar() != '\n');
+				break;
+			}
+			break;
+		case PLAYBACKALL:
+			/* Playback Queue, Priority Queue and Phonebook*/
 			printf("Dequeueing Normal Queue\n");
 			while ((tmp = dequeue(rcvQ)) != NULL) {
 				printf("Deq pointer %p\n", tmp);
@@ -245,22 +283,6 @@ int	main(int argc, char *argv[])
 
 			printf("Printing Phonebook\n");
 			bst_inorder_traversal(phoneBook->root);
-			break;
-		case PLAYBACK:
-			if (!audio_buff) {
-				Errorp("Empty Buffer! Please Record audio before playback\n");
-				break;
-			}
-			else {
-				printf("Playing..\n");
-				PlayBuffer(audio_buff, _msize(audio_buff), sample_sec);
-				printf("%d %d\n", audio_buff_sz, sample_sec);
-				ClosePlayback();
-				printf("Press any key to continue..\n");
-				fgetc(stdin);
-				while (getchar() != '\n');
-				break;
-			}
 			break;
 		case RECEIVE:
 			initPort();
@@ -387,7 +409,10 @@ int	main(int argc, char *argv[])
 			setGlobalCompression(&isCompressed);
 			break;
 		case SETHASH:
-			setGlobalCompression(&isCompressed);
+			setGlobalHash(&isHash);
+			break;
+		case SETAUDIOPARAMS:
+			getNewParam(&sample_sec, &record_time);
 			break;
 		case SETBAUD:
 			setBaudrate(&baudrate);
