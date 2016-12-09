@@ -51,6 +51,9 @@ int	main(int argc, char *argv[])
 	char *bmpRaw;
 	FILETYPE usrFileType;
 	BOOLYN isCompressed = DEFAULT_COMPRESSION_OPTION;
+	void *rcvBuf;
+	int *commPort = NULL;
+	int *baudrate = NULL;
 
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
@@ -220,13 +223,21 @@ int	main(int argc, char *argv[])
 		case DISPLAY:
 			/* Display Queue, Priority Queue and Phonebook*/
 			printf("Dequeueing Normal Queue\n");
-			while ((tmp = dequeue(rcvQ)) != NULL)
-				PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+			while ((tmp = dequeue(rcvQ)) != NULL) {
+				printf("Deq pointer %p\n", tmp);
+				payload_unpack(&rcvHdr, &rcvBuf, tmp->data);
+
+				if (rcvHdr->flags & AUDIO_F)
+					PlayBuffer((short *)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
+			}
 
 			printf("Dequeueing Priority Queue\n");
 			while ((tmpPQ = prioDequeue(rcvPQ)) != NULL) {
 				while ((tmp = dequeue(tmpPQ->queue)) != NULL) {
-					PlayBuffer((short *)tmp->data, audio_buff_sz, sample_sec);
+					payload_unpack(&rcvHdr, &rcvBuf, tmp->data);
+
+					if (rcvHdr->flags & AUDIO_F)
+						PlayBuffer((short *)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
 				}
 			}
 
@@ -240,8 +251,12 @@ int	main(int argc, char *argv[])
 			}
 			else {
 				printf("Playing..\n");
-				PlayBuffer(audio_buff, audio_buff_sz, sample_sec);
+				PlayBuffer(audio_buff, _msize(audio_buff), sample_sec);
+				printf("%d %d\n", audio_buff_sz, sample_sec);
 				ClosePlayback();
+				printf("Press any key to continue..\n");
+				fgetc(stdin);
+				while (getchar() != '\n');
 				break;
 			}
 			break;
@@ -251,24 +266,35 @@ int	main(int argc, char *argv[])
 		case RECEIVE:
 			initPort();
 
-			inputFromPort(&rcvPayload);
+			if (inputFromPort(&rcvPayload) != -1) {
 
-			if (payload_unpack(&rcvHdr, &audio_rcv, rcvPayload)) {
-				printf("DETECT ERRONEOUS MESSAGE\n");
-				printf("Press any key to continue..\n");
-				fgetc(stdin);
-				while (getchar() != '\n');
-				purgePort();
-				CloseHandle(getCom());
-				break;
-			}
+				if (payload_unpack(&rcvHdr, &rcvBuf, rcvPayload)) {
+					printf("DETECT ERRONEOUS MESSAGE\n");
+					printf("Press any key to continue..\n");
+					fgetc(stdin);
+					while (getchar() != '\n');
+					purgePort();
+					CloseHandle(getCom());
+					break;
+				}
 
-			if (rcvHdr->flags & AUDIO_F) {
-				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
-				ClosePlayback();
+				if (rcvHdr->flags & AUDIO_F) {
+					PlayBuffer((short*)rcvBuf, rcvHdr->lDataLength, rcvHdr->sampleSec);
+					ClosePlayback();
+				}
+
+				if (rcvHdr->flags & BMP_F) {
+					FILE *fp;
+
+					fp = fopen("receiveBMP.bmp", "wb");
+					fwrite(rcvBuf, sizeof(char), rcvHdr->lDataLength, fp);
+					fclose(fp);
+
+					DrawBMP("receiveBMP.bmp", 0, 400);
+				}
 
 				rcvNode = (NODE *)malloc(sizeof(NODE));
-				rcvNode->data = audio_rcv;
+				rcvNode->data = rcvPayload;
 				enqueue(rcvQ, rcvNode);
 
 				prioEnqueue(rcvPQ, rcvNode, rcvHdr->priority);
@@ -276,10 +302,13 @@ int	main(int argc, char *argv[])
 				tmpBstNode = bst_node_init();
 				tmpBstNode->data = rcvHdr->senderID;
 				bst_insert(&phoneBook->root, tmpBstNode);
-			}
 
-			purgePort();
-			CloseHandle(getCom());
+				purgePort();
+				CloseHandle(getCom());
+			}
+			printf("Press any key to continue..\n");
+			fgetc(stdin);
+			while (getchar() != '\n');
 			break;
 		case RECORD:
 			initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
@@ -302,19 +331,18 @@ int	main(int argc, char *argv[])
 			break;
 		case SENDAUDIO:
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff),
+			tmpHdr = header_init(usrFileType, _msize(audio_buff),
 				sample_sec, record_time, isCompressed);
 			payload = payload_pack(tmpHdr, audio_buff);
-			//payload_unpack(&rcvHdr, &audio_rcv, payload);
-			//PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 			initPort();
-			printf("sending..%d", _msize(payload));
-			outputToPort(payload, _msize(payload));			// Send audio to port
-			purgePort();									// Purge the port
-			CloseHandle(getCom());							// Closes the handle pointing to the COM port
+			printf("sending %d bytes...", _msize(payload));
+			outputToPort(payload, _msize(payload));
+			purgePort();
+			CloseHandle(getCom());
 			break;
 		case SENDBMP:
-			fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+			/* Sending BMP*/
+			fp = fopen("sample.bmp", "rb");
 
 			if (!fp)
 				printf("Failed to open bmp file\n");
@@ -328,7 +356,7 @@ int	main(int argc, char *argv[])
 			fread(bmpRaw, sizeof(char), bmpSize, fp);
 
 			usrFileType = BMP_T;
-			tmpHdr = header_init(transmitPrio, usrFileType, _msize(bmpRaw),
+			tmpHdr = header_init(usrFileType, _msize(bmpRaw),
 				sample_sec, record_time, isCompressed);
 
 			payload = payload_pack(tmpHdr, bmpRaw);
@@ -347,12 +375,12 @@ int	main(int argc, char *argv[])
 			/* Audio Packaging Diagnostic */
 			printf("Packaging...\n");
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+			tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
 			payload = payload_pack(tmpHdr, audio_buff);
 
 			printf("Unpacking and play...\n");
 			if (payload) {
-				payload_unpack(&rcvHdr, &audio_rcv, payload);
+				payload_unpack(&rcvHdr, (void **)&audio_rcv, payload);
 				printf("Playing..\n");
 				PlayBuffer(audio_rcv, audio_buff_sz, sample_sec);
 				ClosePlayback();
@@ -398,7 +426,7 @@ int	main(int argc, char *argv[])
 		case TESTHEADER:
 			/* Header Diagnostic */
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(transmitPrio, usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+			tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
 			print_header(tmpHdr);
 
 			printf("Press any key to continue..\n");
@@ -407,7 +435,7 @@ int	main(int argc, char *argv[])
 			break;
 		case TESTBMP:
 			/* BMP File Diagnostic*/
-			fp = fopen("G:\\ESE\\Engineering Project III\\Week14\\lena_gray.bmp", "rb");
+			fp = fopen("sample.bmp", "rb");
 
 			if (!fp)
 				printf("Failed to open bmp file\n");

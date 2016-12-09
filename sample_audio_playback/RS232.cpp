@@ -11,11 +11,16 @@
 #define SUCESSSEQ "DEADBEEF"
 #define FTLERR "FTLERR"
 #define WAITTIME 40
-#define PORT "\\\\.\\COM11"
+#define DEFAULT_COMMPORT "\\\\.\\COM11"
+#define COMMPORT10 "\\\\.\\COM10"
+#define COMMPORT13 "\\\\.\\COM13"
 #define MAX_STACK_SIZE 1000000
-static HANDLE hCom;										// Pointer to a COM port
 #define COMBYTESIZE  8									// Number of bits per frame
+#define DEFAULT_BAUDRATE 38400
+static HANDLE hCom;										// Pointer to a COM port
 COMMTIMEOUTS timeout;								// A commtimout struct variable
+static char *port = NULL;
+static int baudrate = DEFAULT_BAUDRATE;
 
 HANDLE getCom()
 {
@@ -24,6 +29,11 @@ HANDLE getCom()
 
 // Initializes the port and sets the communication parameters
 void initPort() {
+
+	if (!port) {
+		port = (char *)malloc(sizeof(char) * strlen(DEFAULT_COMMPORT) + 1);
+		strcpy(port, DEFAULT_COMMPORT);
+	}
 	createPortFile();								// Initializes hCom to point to PORT4 (port 4 is used by USB-Serial adapter on my laptop)
 	purgePort();									// Purges the COM port
 	SetComParms();									// Uses the DCB structure to set up the COM port
@@ -84,31 +94,24 @@ int inputFromPort(LPVOID *rcvPayload) {
 				&NumberofBytesRead,    //Number of bytes read
 				NULL);
 
-			printf(".");
-			//printf("%d ", i);
-			serial[i] = tmp;// Store Tempchar into buffer
+			serial[i] = tmp;
 			i++;
+			if (!(i % 500))
+				printf(".");
 		} while (NumberofBytesRead > 0);
 
-		printf("Total bytes received!: %d\n", i);
-		_sleep(1000);
+		printf("\nTotal bytes received!: %d\n", i);
 		payload = malloc(sizeof(char) * i);
-
 		memcpy(payload, serial, i);
-
 		*rcvPayload = payload;
-
 		return i;
-	} else
-	{
+	} else {
 		printf("\n>No Reception from Partner Com Client!\n");
 		return -1;
 	}
 	
 		
 }
-
-
 
 // Sub functions called by above functions
 /**************************************************************************************/
@@ -117,7 +120,7 @@ int inputFromPort(LPVOID *rcvPayload) {
 void createPortFile() {
 	// Call the CreateFile() function 
 	hCom = CreateFile(
-		PORT,										// COM port number
+		port,										// COM port number
 		GENERIC_READ | GENERIC_WRITE,				// Open for read and write
 		NULL,										// No sharing allowed
 		NULL,										// No security
@@ -129,7 +132,7 @@ void createPortFile() {
 		printf("\nFatal Error 0x%x: Unable to open\n", GetLastError());
 	}
 	else {
-		printf("\n%s is now open\n", PORT);
+		printf("\n%s is now open\n", port);
 	}
 }
 
@@ -145,7 +148,7 @@ static int SetComParms() {
 	}
 
 	// Set our own parameters from Globals
-	dcb.BaudRate = CBR_38400;						// Baud (bit) rate
+	dcb.BaudRate = baudrate;						// Baud (bit) rate
 	dcb.ByteSize = COMBYTESIZE;					// Number of bits(8)
 	dcb.Parity = NOPARITY;									// No parity	
 	dcb.StopBits = ONESTOPBIT;						// One stop bit
@@ -164,3 +167,26 @@ static int SetComParms() {
 	return(1);
 }
 
+void setGlobalBaudRate(int *inputBaud)
+{
+	baudrate = *inputBaud;
+}
+
+void setGlobalCommPort(int inputComm)
+{
+	port = (char *)malloc(sizeof(char) * strlen(DEFAULT_COMMPORT) + 1);
+
+	switch (inputComm) {
+		case 11:
+			strcpy(port, DEFAULT_COMMPORT);
+			break;
+		case 10:
+			strcpy(port, COMMPORT10);
+			break;
+		case 13:
+			strcpy(port, COMMPORT13);
+			break;
+		default:
+			printf("Invalid Comm port\n");
+	}
+}
