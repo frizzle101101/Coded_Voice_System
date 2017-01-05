@@ -168,14 +168,23 @@ void setCommPort(int **commPort)
 	} while ((**commPort != 11) && (**commPort != 10) && (**commPort != 13));
 }
 
-void initializeBuffers (int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type)
+int initializeBuffers (int sample_sec, int record_time, AUDIO *curr_audio, long *audio_buff_sz)
 {
+	int rc = 0;
 	(*audio_buff_sz) = sample_sec * record_time;
 
-	if (type == MEMALLOC)
-		*audio_buff = (short *)malloc(sizeof(short) * (*audio_buff_sz));
-	else 
-		*audio_buff = (short *)realloc(*audio_buff, sizeof(short) * (*audio_buff_sz));
+	if (!curr_audio->audio_buffer)
+		curr_audio->audio_buffer = (short *)malloc(sizeof(short) * (*audio_buff_sz));
+	else if (*audio_buff_sz != _msize(curr_audio->audio_buffer)) {
+		curr_audio->audio_buffer = (short *)realloc(curr_audio->audio_buffer, sizeof(short) * (*audio_buff_sz));
+		curr_audio->recording_time = record_time;
+		curr_audio->sampling_rate = sample_sec;
+	}
+
+	if (!curr_audio->audio_buffer)
+		rc = -ENOMEM;
+
+	return rc;
 }
 
 void displayHelp(char *fileName)
@@ -186,8 +195,7 @@ void displayHelp(char *fileName)
 	fp = fopen(fileName, "r");
 
 	if (fp) {
-		while (1)
-		{
+		while (1) {
 			c = fgetc(fp);
 			if (feof(fp))
 				break;
@@ -196,7 +204,8 @@ void displayHelp(char *fileName)
 		printf("\n");
 		fclose(fp);
 	} else {
-		printf("File: %s not found!\n");
+		printf("Invalid entry: help %s\n", fileName);
+		printf("Type \"help\" for more information\n");
 	}
 }
 

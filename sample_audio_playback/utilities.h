@@ -1,11 +1,12 @@
 #pragma once
 
-typedef enum {
-	MEMALLOC,
-	MEMREALLOC
-} ALLOC_TYPE;
+typedef struct audio_adt{
+	short *audio_buffer;
+	int sampling_rate;
+	int recording_time;
+}AUDIO;
 
-void initializeBuffers(int sample_sec, int record_time, short **audio_buff, long *audio_buff_sz, ALLOC_TYPE type);
+int initializeBuffers(int sample_sec, int record_time, AUDIO *curr_audio, long *audio_buff_sz);
 void getNewParam(int *sample_sec, int *record_time);
 void setPriority(char **prio);
 void setStationID(char **stationID);

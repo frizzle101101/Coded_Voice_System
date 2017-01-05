@@ -25,7 +25,7 @@ int	main(int argc, char *argv[])
 {
 	char option;
 	char *transmitPrio = NULL;
-	short *audio_buff = NULL;
+	//short *audio_buff = NULL;
 	short *audio_rcv = NULL;
 	int sample_sec = DEFAULT_SAMPLES_SEC;
 	int record_time = DEFAULT_RECORD_TIME;
@@ -57,20 +57,24 @@ int	main(int argc, char *argv[])
 	int *commPort = NULL;
 	int *baudrate = NULL;
 	int rcvByte;
+	char input[MAX];
+	char *str1 = NULL;
+	char helpstat[MAX];
+	char *usrText = NULL;
+	int record_flag = 0;
+	OPTIONS options;
+	AUDIO audio_content;
 
+	audio_content.audio_buffer = NULL;
 	rcvQ = queue_init();
 	tmp = (NODE *)malloc(sizeof(NODE));
 	rcvPQ = prioQueue_init();
 	phoneBook = bst_init();
 
-	initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
-	char input[MAX];
-	char *str1 = NULL;
-	char helpstat[MAX];
-	char *usrText;
+	initializeBuffers(sample_sec, record_time, &audio_content, &audio_buff_sz);
+	audio_content.sampling_rate = sample_sec;
+	audio_content.recording_time = record_time;
 
-	OPTIONS options;
-	//gets_s(input);
 	while (1) {
 		printf(">");
 		gets_s(input);
@@ -78,49 +82,28 @@ int	main(int argc, char *argv[])
 			input[i] = tolower(input[i]);
 		}
 		str1 = strtok(input, " -");
-		if (strcmp("help", str1) == 0)
-		{
+		if (strcmp("help", str1) == 0) {
 			options = HELP;
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				strcpy(helpstat, "help");
 			else
 				strcpy(helpstat, str1);
-		}
-		else if (strcmp("compose", str1) == 0)
+		} else if (strcmp("compose", str1) == 0)
 			options = COMPOSE;
 		else if (strcmp("display", str1) == 0)
 			options = DISPLAY;
-		else if (strcmp("playback", str1) == 0)
-		{
+		else if (strcmp("playback", str1) == 0) {
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
 				options = PLAYBACK;
-			else if (strcmp("a", str1) == 0)
+			else if (strcmp("a", str1) == 0) 
 				options = PLAYBACKALL;
-		}
-		else if (strcmp("receive", str1) == 0)
+		} else if (strcmp("receive", str1) == 0)
 			options = RECEIVE;
-		else if (strcmp("record", str1) == 0)
-		{
+		else if (strcmp("record", str1) == 0) {
 			options = RECORD;
-			char *tempRecTime = strtok(NULL, " -");
-			char *tempRecSampl;
-			if (tempRecTime == NULL)
-			{
-				record_time = DEFAULT_RECORD_TIME;
-				tempRecSampl = strtok(NULL, " -");
-			}
-			else
-				record_time = atoi(tempRecTime);
-
-			if (tempRecSampl == NULL)
-				sample_sec = DEFAULT_SAMPLES_SEC;
-			else
-				sample_sec = atoi(tempRecTime);
-		}
-		else if (strcmp("select", str1) == 0)
-		{
+		} else if (strcmp("select", str1) == 0) {
 			strcpy(helpstat, str1);
 			char *tempId = strtok(NULL, " -");
 			if (tempId == NULL)
@@ -129,25 +112,20 @@ int	main(int argc, char *argv[])
 				options = SELECTR;
 			else if (strcmp("s", tempId) == 0)
 				options = SELECTS;
-			else
-			{
+			else {
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
 					options = HELP;
-				else if (strcmp("r", str1) == 0)
-				{
+				else if (strcmp("r", str1) == 0) {
 					targetID = tempId;
 					options = SELECTRID;
-				}
-				else if (strcmp("s", str1) == 0)
-				{
+				} else if (strcmp("s", str1) == 0) {
 					stationID = tempId;
 					options = SELECTSID;
-				}
+				} else
+					options = INVALID;
 			}
-		}
-		else if (strcmp("send", str1) == 0)
-		{
+		} else if (strcmp("send", str1) == 0) {
 			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
@@ -158,28 +136,25 @@ int	main(int argc, char *argv[])
 				options = SENDBMP;
 			else if (strcmp("t", str1) == 0)
 				options = SENDTEXT;
-		}
-		else if (strcmp("settings", str1) == 0)
+			else
+				options = INVALID;
+		} else if (strcmp("settings", str1) == 0)
 			options = SETTINGS;
-		else if (strcmp("set", str1) == 0)
-		{
+		else if (strcmp("set", str1) == 0) {
 			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
-				options = HELP;
-			else if (strcmp("cmprs", str1) == 0)
-			{
+				options = INVALID;
+			else if (strcmp("cmprs", str1) == 0) {
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
-					options = HELP;
+					options = INVALID;
 				else if (strcmp("1", str1) == 0)
 					isCompressed = TRUE_B;
 				else if (strcmp("0", str1) == 0)
 					isCompressed = FALSE_B;
 				options = SETCMPRS;
-			}
-			else if (strcmp("hash", str1) == 0)
-			{
+			} else if (strcmp("hash", str1) == 0) {
 				str1 = strtok(NULL, " -");
 				if (str1 == NULL)
 					options = HELP;
@@ -188,45 +163,35 @@ int	main(int argc, char *argv[])
 				else if (strcmp("0", str1) == 0)
 					isHash = FALSE_B;
 				options = SETHASH;
-			}
-			else if (strcmp("audioparams", str1) == 0)
+			} else if (strcmp("audioparams", str1) == 0)
 				options = SETAUDIOPARAMS;
-			else if (strcmp("priority", str1) == 0)
-			{
+			else if (strcmp("priority", str1) == 0) {
 				char temp = strtol(strtok(NULL, " -"), NULL, 10);
 				if (temp == NULL)
 					options = SETPRIORITY;
-				else
-				{
+				else {
 					transmitPrio = &temp;
 					options = SETPRIORITYID;
 				}
-			}
-			else if (strcmp("baud", str1) == 0)
-			{
+			} else if (strcmp("baud", str1) == 0) {
 				int temp = strtol(strtok(NULL, " -"), NULL, 10);
 				if (temp == NULL)
 					options = SETBAUD;
-				else
-				{
+				else {
 					baudrate = &temp;
 					options = SETBAUDID;
 				}
-			}
-			else if (strcmp("com", str1) == 0)
-			{
+			} else if (strcmp("com", str1) == 0) {
 				int temp = strtol(strtok(NULL, " -"), NULL, 10);
 				if (temp == NULL)
 					options = SETCOM;
-				else
-				{
+				else {
 					commPort = &temp;
 					options = SETCOMID;
 				}
-			}
-		}
-		else if (strcmp("test", str1) == 0)
-		{
+			} else
+				options = INVALID;
+		} else if (strcmp("test", str1) == 0) {
 			strcpy(helpstat, str1);
 			str1 = strtok(NULL, " -");
 			if (str1 == NULL)
@@ -241,14 +206,17 @@ int	main(int argc, char *argv[])
 				options = TESTHEADER;
 			else if (strcmp("b", str1) == 0)
 				options = TESTBMP;
+			else
+				options = INVALID;
 		}
 		else
-			printf("invlaid input. Defaulting to help\n");
-
-		long audio_buff_sz = sample_sec * record_time;
+			options = INVALID;
 
 		switch (options)
 		{
+		case INVALID:
+			printf("Invalid Input/Option. Please Type \"help\" or\n\"help [command]\" for more information\n");
+			break;
 		case HELP:
 			displayHelp(helpstat);
 			break;
@@ -262,21 +230,18 @@ int	main(int argc, char *argv[])
 				printf("No text entered! Use command (compose) to enter message.\n");
 			break;
 		case PLAYBACK:
-			if (!audio_buff) {
-				Errorp("Empty Buffer! Please Record audio before playback\n");
+			if (!record_flag) {
+				printf("Empty Buffer! Please Record audio before playback\n");
 				break;
-			}
-			else {
-				printf("Playing..\n");
-				PlayBuffer(audio_buff, _msize(audio_buff), sample_sec);
-				printf("%d %d\n", audio_buff_sz, sample_sec);
+			} else {
+				printf("Playing..wtf\n");
+				PlayBuffer(audio_content.audio_buffer, _msize(audio_content.audio_buffer), audio_content.sampling_rate);
 				ClosePlayback();
 				printf("Press any key to continue..\n");
 				fgetc(stdin);
 				while (getchar() != '\n');
 				break;
 			}
-			break;
 		case PLAYBACKALL:
 			/* Playback Queue, Priority Queue and Phonebook*/
 			printf("Dequeueing Normal Queue\n");
@@ -358,9 +323,11 @@ int	main(int argc, char *argv[])
 			while (getchar() != '\n');
 			break;
 		case RECORD:
-			initializeBuffers(sample_sec, record_time, &audio_buff, &audio_buff_sz, MEMALLOC);
-			RecordBuffer(audio_buff, audio_buff_sz, sample_sec);
+			initializeBuffers(sample_sec, record_time, &audio_content, &audio_buff_sz);
+			RecordBuffer(audio_content.audio_buffer, audio_buff_sz, sample_sec);
 			CloseRecording();
+			if (!record_flag)
+				record_flag = 1;
 			break;
 		case SELECTR:
 			setTargetID(&targetID);
@@ -378,9 +345,9 @@ int	main(int argc, char *argv[])
 			break;
 		case SENDAUDIO:
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(usrFileType, _msize(audio_buff),
+			tmpHdr = header_init(usrFileType, _msize(audio_content.audio_buffer),
 				sample_sec, record_time, isCompressed);
-			payload = payload_pack(tmpHdr, audio_buff);
+			payload = payload_pack(tmpHdr, audio_content.audio_buffer);
 			initPort();
 			printf("sending %d bytes...\n", _msize(payload));
 			outputToPort(payload, _msize(payload));
@@ -474,8 +441,8 @@ int	main(int argc, char *argv[])
 			/* Audio Packaging Diagnostic */
 			printf("Packaging...\n");
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
-			payload = payload_pack(tmpHdr, audio_buff);
+			tmpHdr = header_init(usrFileType, _msize(audio_content.audio_buffer), sample_sec, record_time, isCompressed);
+			payload = payload_pack(tmpHdr, audio_content.audio_buffer);
 
 			printf("Unpacking and play...\n");
 			if (payload) {
@@ -525,7 +492,7 @@ int	main(int argc, char *argv[])
 		case TESTHEADER:
 			/* Header Diagnostic */
 			usrFileType = AUDIO_T;
-			tmpHdr = header_init(usrFileType, _msize(audio_buff), sample_sec, record_time, isCompressed);
+			tmpHdr = header_init(usrFileType, _msize(audio_content.audio_buffer), sample_sec, record_time, isCompressed);
 			print_header(tmpHdr);
 
 			printf("Press any key to continue..\n");

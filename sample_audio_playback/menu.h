@@ -18,7 +18,8 @@ void record(void);
 void select(void);
 void settings(void);
 void remove(void);
-typedef enum { 
+typedef enum {
+	INVALID,
 	HELP,
 	COMPOSE, 
 	DISPLAY, 
