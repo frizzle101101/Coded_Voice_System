@@ -1,6 +1,8 @@
 For more information on a specific command, type help command-name
 
 help            Call help for a command
+compose         Compose message and save in program.
+display         Display saved message.
 playback        Play the recorded audio file.
 receive         Waiting for a RS-232 comm port message. (A blocking call).
 record          Record an audio file.
